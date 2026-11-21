@@ -1,0 +1,1712 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Literacy · My Activities</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: phone-first single column — name picker first, then a personal checklist with a progress meter on top. */
+:root {
+  --bg: #F3F6F7; --surface: #FFFFFF; --ink: #15242B; --muted: #586B73; --line: #D6E0E3;
+  --accent: #0F766E; --accent-soft: #DDF1EE; --accent-ink: #FFFFFF;
+  --amber: #B45309; --amber-soft: #FDF0DC; --danger: #B42318; --danger-soft: #FDE8E6;
+  --display: 'Lexend', 'Trebuchet MS', Arial, sans-serif; --body: 'Atkinson Hyperlegible', Verdana, Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0F1A1E; --surface: #17262B; --ink: #E8F0F1; --muted: #9BB0B6; --line: #2A3E44;
+    --accent: #3CC2B4; --accent-soft: #163B38; --accent-ink: #062320;
+    --amber: #F0A54A; --amber-soft: #3A2A14; --danger: #F2837A; --danger-soft: #3D1C1A; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 17px/1.5 var(--body); }
+.wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: max(20px, env(safe-area-inset-top)) 64px; display: flex; flex-direction: column; gap: 20px; }
+.eyebrow { font: 700 13px var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.org { display: flex; flex-direction: column; gap: 2px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1.5px solid var(--line); }
+.org .eyebrow { font-size: 12px; letter-spacing: .08em; line-height: 1.4; }
+.nw { white-space: nowrap; }
+.org .school { font: 600 clamp(17px, 4.5vw, 21px)/1.25 var(--display); color: var(--ink); }
+h1 { font: 700 clamp(28px, 7vw, 40px)/1.1 var(--display); margin: 0; }
+h2 { font: 600 22px var(--display); margin: 0; }
+.banner { background: var(--amber-soft); border: 1.5px solid var(--amber); border-radius: 12px; padding: 10px 14px; font-size: 15px; }
+button { font: 700 16px var(--body); border-radius: 12px; padding: 12px 18px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.small { padding: 6px 12px; font-size: 14px; border-radius: 10px; }
+button:disabled { opacity: .55; cursor: default; }
+button:focus-visible, input:focus-visible, a:focus-visible, label.upload:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
+input[type=search] { font: 400 17px var(--body); width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); }
+.names { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.names button { text-align: left; font-weight: 700; padding: 14px 16px; min-width: 0; overflow-wrap: anywhere; }
+.names button:hover { border-color: var(--accent); }
+.note { color: var(--muted); font-size: 15px; margin: 0; }
+.err { color: var(--danger); font-size: 15px; margin: 0; }
+
+.hello { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.hello h1 { overflow-wrap: anywhere; min-width: 0; }
+.progress { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+.progress .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.progress b { font: 700 30px var(--display); font-variant-numeric: tabular-nums; }
+.bar { height: 14px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width .4s; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filters button { padding: 8px 14px; font-size: 15px; border-radius: 999px; }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.list { display: flex; flex-direction: column; gap: 14px; }
+.card { background: var(--surface); border: 1.5px solid var(--line); border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card.done, .card.checked { border-color: var(--accent); }
+.card.redo { border-color: var(--amber); }
+.meta { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 14px; color: var(--muted); }
+.chip { font: 700 13px var(--body); border-radius: 999px; padding: 4px 12px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.chip.done, .chip.checked { background: var(--accent-soft); color: var(--ink); border-color: var(--accent); }
+.chip.redo { background: var(--amber-soft); color: var(--ink); border-color: var(--amber); }
+.card h3 { font: 600 20px/1.25 var(--display); margin: 0; overflow-wrap: anywhere; }
+.instr { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.instr a { color: var(--accent); font-weight: 700; }
+.teacher { background: var(--amber-soft); border-radius: 10px; padding: 8px 12px; font-size: 15px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+label.upload { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; border: 1.5px dashed var(--accent); color: var(--accent); border-radius: 12px; padding: 12px 18px; cursor: pointer; }
+label.upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.preview { max-width: 100%; max-height: 260px; border-radius: 10px; border: 1px solid var(--line); display: block; }
+.preview-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin: 8px 0; }
+.preview-grid img { width:100%; max-height:220px; object-fit:cover; border-radius:10px; border:1px solid var(--line); display:block; }
+.upload-note { font-size:12px; color:var(--muted); margin-top:6px; }
+.status { font-weight: 700; color: var(--accent); }
+.empty { background: var(--surface); border: 1.5px dashed var(--line); border-radius: 16px; padding: 24px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 5px; }
+.seg button { border: none; border-radius: 10px; font: 600 17px var(--display); padding: 10px; background: transparent; color: var(--muted); }
+.seg button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.lesson { display: flex; align-items: center; gap: 14px; text-align: left; width: 100%; background: var(--surface); border: 1.5px solid var(--line); border-radius: 16px; padding: 14px 18px; }
+.lesson:hover { border-color: var(--accent); }
+.lesson .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lesson .t b { font: 600 19px/1.25 var(--display); overflow-wrap: anywhere; }
+.lesson .t span { font-size: 14px; color: var(--muted); font-weight: 400; }
+.lesson.read { border-color: var(--accent); }
+.reader { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px clamp(16px, 4vw, 32px) 28px; display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+#readerBody { width: 100%; display: flex; flex-direction: column; gap: 12px; font-size: 18px; line-height: 1.6; }
+#readerBody .kicker { font-size: 14px; color: var(--muted); }
+#readerBody h1 { font-size: clamp(26px, 6vw, 34px); }
+#readerBody h2 { font: 600 clamp(22px, 5vw, 26px)/1.25 var(--display); margin: 12px 0 0; }
+#readerBody h3 { font: 600 19px/1.3 var(--display); margin: 8px 0 0; }
+#readerBody p { margin: 0; overflow-wrap: anywhere; max-width: 68ch; }
+#readerBody ul { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; max-width: 68ch; }
+#readerBody a { color: var(--accent); font-weight: 700; overflow-wrap: anywhere; }
+#readerBody img { max-width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
+.readbtn { margin-top: 8px; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-weight: 700; max-width: calc(100% - 32px); }
+.roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.rolebtn { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 22px 20px; border-radius: 18px; border-width: 2px; }
+.rolebtn:hover { border-color: var(--accent); }
+.rolebtn .ico { font-size: 38px; line-height: 1; margin-bottom: 6px; }
+.rolebtn b { font: 700 24px var(--display); }
+.rolebtn span:last-child { font-weight: 400; color: var(--muted); font-size: 15px; }
+.back { align-self: flex-start; }
+.field { font: 400 17px var(--body); width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); margin-top: 6px; }
+textarea.field { resize: vertical; line-height: 1.45; }
+.field:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+form.card label { display: block; }
+label.check { display: flex !important; gap: 10px; align-items: center; font-weight: 700; }
+label.check input { width: 22px; height: 22px; accent-color: var(--accent); }
+.seg3 { grid-template-columns: 1fr 1fr 1fr; }
+.seg3 button { font-size: 15px; padding: 10px 4px; white-space: nowrap; }
+.count { display: inline-block; min-width: 1.6em; padding: 0 6px; border-radius: 999px; background: var(--amber); color: #fff; font-size: 13px; }
+.count:empty { display: none; }
+.sub .who { font: 600 19px/1.25 var(--display); margin: 0; overflow-wrap: anywhere; }
+.sub .what { margin: 0; color: var(--muted); overflow-wrap: anywhere; }
+.sub .photo { max-width: 100%; max-height: 420px; border-radius: 10px; border: 1px solid var(--line); display: block; }
+.sub a { color: var(--accent); font-weight: 700; }
+.chip.submitted { background: var(--amber-soft); color: var(--ink); border-color: var(--amber); }
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; max-width: 100%; }
+.tablewrap table { border-collapse: collapse; font-size: 15px; min-width: 100%; }
+.tablewrap th, .tablewrap td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: center; white-space: nowrap; }
+.tablewrap th { font-weight: 700; vertical-align: bottom; max-width: 140px; white-space: normal; font-size: 13px; }
+.tablewrap th:first-child, .tablewrap td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); white-space: nowrap; font-weight: 700; }
+.tablewrap td.redo { color: var(--amber); font-weight: 700; }
+.tablewrap td.ok { color: var(--accent); font-weight: 700; }
+.tablewrap td.pct { font-weight: 700; font-variant-numeric: tabular-nums; text-align: left; }
+.mini { display: inline-block; width: 44px; height: 8px; border-radius: 99px; background: var(--line); margin-right: 6px; vertical-align: middle; overflow: hidden; }
+.mini i { display: block; height: 100%; background: var(--accent); }
+.tablewrap tfoot td { font-weight: 700; background: var(--bg); border-top: 2px solid var(--line); font-size: 13px; }
+.tablewrap tfoot td:first-child { background: var(--bg); }
+.work { padding: 8px 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.work:last-child { border-bottom: none; }
+.work .actrow { border-bottom: none; padding: 0; }
+.workx:empty { display: none; }
+details.ans summary { cursor: pointer; font-weight: 700; color: var(--accent); }
+details.ans .qa { margin-top: 10px; padding: 10px 12px; background: var(--bg); border-radius: 10px; }
+details.ans .qa b { font-size: 15px; }
+details.ans .qa p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.qtag { font-weight: 400; color: var(--muted); font-size: 12px; }
+.worktable td { vertical-align: top; }
+.worktable td.wcell { white-space: normal; min-width: 170px; max-width: 230px; text-align: left; }
+.cellbtn { all: unset; cursor: pointer; display: block; font-size: 14px; line-height: 1.35; color: var(--ink); }
+.cellbtn:hover, .cellbtn:focus-visible { text-decoration: underline; outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.cellbtn .more { display: block; margin-top: 4px; font-weight: 700; color: var(--accent); font-size: 13px; }
+.worktable .redo { color: var(--amber); font-weight: 700; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; z-index: 20; overflow-y: auto; }
+.modalbox { background: var(--surface); border-radius: 16px; padding: 16px 18px; width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 12px; }
+.modalbox .qa { padding: 10px 12px; background: var(--bg); border-radius: 10px; margin-top: 8px; }
+.modalbox .qa p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.shelf { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+@media (max-width: 340px) { .shelf { grid-template-columns: repeat(3, 1fr); } }
+.badge { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 10px 2px; border-radius: 14px; background: var(--accent-soft); border: 1.5px solid var(--accent); min-width: 0; }
+.badge .i { font-size: 28px; line-height: 1; }
+.badge b { font: 700 12px/1.2 var(--display); overflow-wrap: normal; word-break: normal; hyphens: none; }
+.badge.off { background: var(--bg); border: 1.5px dashed var(--line); filter: grayscale(1); opacity: .6; }
+.badge .how { font-size: 11px; color: var(--muted); line-height: 1.25; }
+.pick { background: #FFF7E0; color: #3A2C05; border: 1.5px solid #E0B43A; border-radius: 12px; padding: 10px 12px; font-size: 15px; overflow-wrap: anywhere; }
+.pick .note { color: #6B5A2A; }
+.mini-b { font-size: 15px; letter-spacing: 2px; }
+.pickbtn { border-color: #E0B43A; }
+.bset { display: flex; align-items: center; gap: 4px 10px; font-weight: 700; flex-wrap: wrap; }
+.bset .note { flex-basis: 100%; padding-left: 32px; margin-top: -4px; }
+.bset input { width: 22px; height: 22px; accent-color: var(--accent); }
+.attempts { font-size: 13px; font-weight: 700; color: var(--amber); }
+.progseg3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.progseg3 button { font-size: clamp(12px, 2.5vw, 16px); padding: 10px 4px; white-space: normal; line-height: 1.25; }
+.mpscards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.mpscard { border:1px solid var(--line); border-radius:12px; padding:14px; background:var(--surface); min-width:0; }
+.mpscard .metric {font:700 25px/1.2 var(--display);font-variant-numeric:tabular-nums; margin-top:6px;}
+.mpscard .note {font-size:13px;}
+.mps-row {display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+.mps-table {width:100%; border-collapse:collapse; font-size:14px;}
+.mps-table th,.mps-table td {padding:11px 9px; border-bottom:1px solid var(--line); text-align:left;vertical-align:top;}
+.mps-table th:not(:first-child), .mps-table td:not(:first-child){text-align:right;white-space:nowrap;}
+.mps-table th {font-size:12px;color:var(--muted);}
+.seg4 { grid-template-columns: repeat(4, 1fr); }
+.seg4 button { font-size: 14px; padding: 10px 2px; white-space: nowrap; }
+.seg4.guest { grid-template-columns: repeat(3, 1fr); }
+    .seg4.ai-tabs { grid-template-columns: repeat(5, 1fr); }
+    @media(max-width:560px){ .seg4.ai-tabs { grid-template-columns: repeat(3, 1fr); } .seg4.ai-tabs button { font-size:12px; } }
+.avatar { display: inline-grid; place-items: center; flex: none; border-radius: 50%; overflow: hidden; background: var(--accent-soft); color: var(--accent); font: 700 18px var(--display); border: 2px solid var(--accent); width: 48px; height: 48px; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar.lg { width: 112px; height: 112px; font-size: 38px; border-width: 3px; }
+.me { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.picrow { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.fixed { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; border-radius: 12px; background: var(--bg); border: 1px dashed var(--line); }
+.fixed span { font-size: 14px; color: var(--muted); }
+.back2 { align-self: flex-start; }
+.stugrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.stucard { display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px; min-width: 0; }
+.stucard:hover { border-color: var(--accent); }
+.stucard .t { display: flex; flex-direction: column; min-width: 0; }
+.stucard .t b { overflow-wrap: anywhere; }
+.stucard .t span { font-weight: 400; font-size: 14px; color: var(--muted); }
+.profhead { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.profhead h2 { overflow-wrap: anywhere; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+.actrow { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.actrow:last-child { border-bottom: none; }
+.linkbtn { background: none; border: none; padding: 0; font: inherit; font-weight: 700; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; text-align: left; border-radius: 4px; }
+.avatar.sm { width: 40px; height: 40px; font-size: 15px; }
+.tstrip { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); min-width: 0; }
+.tstrip > div { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.tstrip .lbl { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.tstrip b { overflow-wrap: anywhere; }
+.tstrip .det { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.tstrip.big { background: var(--surface); padding: 12px 16px; border-radius: 16px; }
+.tstrip.big .avatar { width: 56px; height: 56px; font-size: 20px; }
+.picq { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.picq:last-child { border-bottom: none; }
+.picq .arrow { color: var(--muted); font-weight: 700; }
+.picq b { flex: 1; min-width: 140px; overflow-wrap: anywhere; }
+a.btnlink { display: inline-flex; align-items: center; gap: 8px; font: 700 16px var(--body); border-radius: 12px; padding: 12px 18px; text-decoration: none; background: var(--accent); color: var(--accent-ink); border: 1.5px solid var(--accent); }
+a.btnlink.ghost { background: var(--surface); color: var(--accent); }
+.score { align-self: flex-start; background: var(--accent-soft); border: 1.5px solid var(--accent); border-radius: 10px; padding: 6px 12px; font-size: 16px; }
+.score b { font: 700 20px var(--display); font-variant-numeric: tabular-nums; }
+.score.inline { display: inline-block; padding: 2px 8px; font-size: 14px; margin-left: 6px; }
+.score.inline b { font-size: 15px; }
+.activity-status-group { display: inline-flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
+label.check[hidden] { display: none !important; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+
+/* Student activity accordion: titles first, full details on demand. */
+.activity-card { display: block; padding: 0; overflow: hidden; }
+.activity-card > summary.activity-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; cursor: pointer; list-style: none; border-radius: 16px; }
+.activity-card > summary.activity-head::-webkit-details-marker { display: none; }
+.activity-card > summary.activity-head::marker { content: ""; }
+.activity-card > summary.activity-head:hover { background: var(--accent-soft); }
+.activity-card > summary.activity-head:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.activity-card .activity-main { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
+.activity-card .activity-main strong { font: 600 19px/1.3 var(--display); overflow-wrap: anywhere; }
+.activity-card .activity-main small { font: 400 14px/1.4 var(--body); color: var(--muted); overflow-wrap: anywhere; }
+.activity-card .activity-chevron { font-size: 20px; line-height: 1; color: var(--muted); transition: transform .2s; }
+.activity-card[open] .activity-chevron { transform: rotate(180deg); }
+.activity-card .activity-body { display: flex; flex-direction: column; gap: 10px; padding: 0 18px 18px; border-top: 1px solid var(--line); }
+.activity-card .activity-body > :first-child { margin-top: 12px; }
+@media (prefers-reduced-motion: reduce) { .activity-card .activity-chevron { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <div class="org">
+      <span class="eyebrow"><span class="nw">Region IX - Zamboanga Peninsula</span> · <span class="nw">SDO Zamboanga del Sur</span></span>
+      <span class="school">Tukuran Technical Vocational High School</span>
+    </div>
+    <h1 id="title">My Activities</h1>
+  </div>
+  <div class="banner" id="demo" hidden><b>Preview mode.</b> This page is not connected to the Google Sheet yet, so it shows sample activities and nothing is saved.</div>
+
+  <section id="role" class="list" hidden>
+    <h2>Who are you?</h2>
+    <div class="roles">
+      <button class="rolebtn" id="asStudent"><span class="ico" aria-hidden="true">🎓</span><b>Student</b><span>Read lessons and do activities</span></button>
+      <button class="rolebtn" id="asTeacher"><span class="ico" aria-hidden="true">🧑‍🏫</span><b>Teacher</b><span>Check work and post activities</span></button>
+      <button class="rolebtn" id="asGuest"><span class="ico" aria-hidden="true">👀</span><b>Guest</b><span>View class progress, work and profiles · no password</span></button>
+    </div>
+  </section>
+
+  <section id="pinBox" class="list" hidden>
+    <button class="small back" data-to="role">◀ Back</button>
+    <h2>Teacher sign in</h2>
+    <form id="pinForm" class="card">
+      <label for="pin"><b>Enter your teacher PIN</b></label>
+      <input type="password" id="pin" inputmode="numeric" autocomplete="current-password" class="field">
+      <p class="err" id="pinErr" hidden></p>
+      <div class="actions"><button class="primary" type="submit" id="pinGo">Sign in</button></div>
+    </form>
+  </section>
+
+  <section id="teach" class="list" hidden>
+    <div class="hello"><h2 id="tHello">👋 Hello, Teacher!</h2>
+      <div class="actions"><button class="small" id="tMeBtn">🧑‍🏫 My profile</button><button class="small" id="logout">Sign out</button></div></div>
+    <div id="tTeacherCard"></div>
+    <p class="banner" id="guestNote" hidden><b>Guest view.</b> You can look at progress, work and profiles, but you can't change anything.</p>
+    <div class="seg seg4" id="tTabs" role="tablist" aria-label="Section">
+      <button role="tab" data-t="check" aria-selected="true">📷 <span id="checkLbl">Check</span></button>
+      <button role="tab" data-t="prog" aria-selected="false">📊 Progress</button>
+      <button role="tab" data-t="stu" aria-selected="false">👤 Students <span class="count" id="cntPics"></span></button>
+      <button role="tab" data-t="post" id="tabPost" aria-selected="false">➕ Post</button>
+      <button role="tab" data-t="ai" id="tabAi" aria-selected="false">🤖 AI Grading</button>
+    </div>
+
+    <div id="tFormWarn" class="banner" hidden></div>
+    <div id="tCheck" class="list">
+      <div class="filters" role="group" aria-label="Show submissions">
+        <button data-s="Submitted" aria-pressed="true">Needs checking <span class="count" id="cntNew"></span></button>
+        <button data-s="Redo" aria-pressed="false">Redo</button>
+        <button data-s="Checked" aria-pressed="false">Checked</button>
+        <button data-s="all" aria-pressed="false">All</button>
+        <button class="small treload" style="margin-left:auto">↻ Refresh</button>
+      </div>
+      <div class="actions" id="syncRow"><button class="small" id="syncBtn">📝 Get Google Form answers</button><span class="note">Use if students answered a form but are not marked done.</span></div>
+      <pre class="teacher" id="syncOut" hidden style="white-space:pre-wrap;font:14px/1.45 var(--body);margin:0"></pre>
+      <select id="tActFilter" class="field" aria-label="Filter by activity"></select>
+      <div class="list" id="tSubs"></div>
+    </div>
+
+    <div id="tProg" class="list" hidden>
+      <div class="filters"><span class="note">✓ done · ✓✓ checked · ↺ redo · numbers = quiz score · blank = not yet</span><button class="small treload" style="margin-left:auto">↻ Refresh</button></div>
+      <div class="seg progseg3" id="progSeg" role="tablist" aria-label="Progress view">
+        <button role="tab" data-pv="sum" aria-selected="true">📊 Summary</button>
+        <button role="tab" data-pv="ans" aria-selected="false">📝 Answers &amp; scores</button>
+        <button role="tab" data-pv="mps" aria-selected="false">📈 Summative Analysis</button>
+      </div>
+      <div id="pvSum" class="list">
+        <div class="progress" id="classSum"></div>
+        <div class="tablewrap" id="tGrid"></div>
+        <p class="note">Tap a name to see that student's profile.</p>
+      </div>
+      <div id="pvAns" class="list" hidden>
+        <p class="note">Quizzes show the score. Reflections and essays show the answer. Tap a cell to read it all. Blank = not answered yet.</p>
+        <div class="tablewrap" id="tWork"></div>
+      </div>
+      <div id="pvMps" class="list" hidden>
+        <p class="note">Class-level MPS and population SD from saved summative test scores. Students without a valid score are not counted as zero.</p>
+        <div id="mpsOut" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div id="tAi" class="list" hidden>
+      <div class="card">
+        <h2>🤖 AI-assisted Essay Grading</h2>
+        <p class="note">When you mark a written Google Form submission Checked, automatic AI grading is queued. The approved score will appear in Progress after processing. This tab remains available for optional manual grading and corrections. Student answers are sent to Gemini only when grading runs.</p>
+        <p id="aiStatus" role="status" class="note">Checking grading settings…</p>
+        <details id="aiReviewDashboard" class="card" style="margin:12px 0;padding:14px">
+          <summary style="cursor:pointer"><b>📋 Review & Errors</b> <span class="note">All activities · missing grades and Gemini issues</span></summary>
+          <div class="actions" style="margin:12px 0;align-items:center">
+            <button type="button" class="small" id="aiReviewRefresh">↻ Refresh Review List</button>
+            <label for="aiReviewFilter">Show</label>
+            <select class="field" id="aiReviewFilter" style="max-width:230px">
+              <option value="action">Needs Review & Errors</option>
+              <option value="all">All unscored Checked work</option>
+              <option value="Needs Review">Needs Review only</option>
+              <option value="Gemini Error">Gemini errors only</option>
+              <option value="Awaiting score">Awaiting score only</option>
+              <option value="Queued">Pending / Processing only</option>
+            </select>
+          </div>
+          <p class="note" id="aiReviewTotals" aria-live="polite">Open this panel and click Refresh Review List.</p>
+          <div id="aiReviewResults" class="list" style="gap:8px"></div>
+        </details>
+        <label for="aiActivity"><b>Choose essay activity</b></label>
+        <select class="field" id="aiActivity"><option value="">Select activity…</option></select>
+        <p class="note">All enrolled students appear below. Scores and checking status load once per topic; written answers load only when you expand a student. Existing scores are not re-graded.</p>
+        <label for="aiSearch"><b>Find a student</b></label>
+        <input class="field" id="aiSearch" type="search" placeholder="Search names…" autocomplete="off">
+        <div id="aiRosterCount" class="note" aria-live="polite"></div>
+        <div id="aiRosterList" class="list" style="gap:8px" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div id="tStu" class="list" hidden>
+      <details id="badgeSet" class="card" hidden>
+        <summary><b>🏅 Badge settings</b> <span class="note">Turn badges on or off for the whole class</span></summary>
+        <div id="badgeBoxes" class="list" style="gap:8px;margin-top:10px"></div>
+        <div class="actions"><button class="primary small" id="badgeSave">Save</button></div>
+      </details>
+      <div id="tPics" class="card" hidden></div>
+      <div id="tStuList" class="list">
+        <input type="search" id="stuSearch" placeholder="Search a student…" aria-label="Search a student" autocomplete="off">
+        <div class="stugrid" id="stuGrid"></div>
+      </div>
+      <div id="tStuOne" class="list" hidden></div>
+    </div>
+
+    <div id="tPost" class="list" hidden>
+      <div class="seg" role="tablist" aria-label="What to post">
+        <button role="tab" data-p="act" aria-selected="true">✏️ Activity</button>
+        <button role="tab" data-p="les" aria-selected="false">📖 Lesson</button>
+      </div>
+      <form id="actForm" class="card">
+        <label><b>Activity title</b><input class="field" name="title" required maxlength="150" placeholder="e.g. Spot the AI at home"></label>
+        <label><b>Instructions for students</b><textarea class="field" name="instructions" rows="6" placeholder="What should students do?"></textarea></label>
+        <label><b>Google Form link</b> <span class="note">(optional)</span><input class="field" name="form" type="url" placeholder="https://docs.google.com/forms/d/…/edit"></label>
+        <p class="note">Open your form in edit mode and copy the link from the address bar (it ends in <b>/edit</b>). The form needs a question with <b>"Name"</b> in its title. Students' names then fill in by themselves, and the activity turns ✓ Done when they submit.</p>
+        <label class="check" id="shotRow"><input type="checkbox" name="needsScreenshot" checked> Students must send a photo or screenshot</label>
+        <p class="note" id="shotNote">If unticked, students just tap "Mark as done".</p>
+        <div class="actions"><button class="primary" type="submit">Post activity</button></div>
+      </form>
+      <form id="lesForm" class="card" hidden>
+        <label><b>Lesson title</b><input class="field" name="title" required maxlength="150" placeholder="e.g. How AI learns from data"></label>
+        <label><b>Lesson text</b><textarea class="field" name="text" rows="10" placeholder="# Big heading&#10;## Small heading&#10;- bullet point&#10;Normal sentences on their own lines."></textarea></label>
+        <p class="note">Start a line with <b>#</b> for a heading, <b>##</b> for a smaller heading, <b>-</b> for a bullet. A picture link on its own line shows the picture.</p>
+        <label><b>Or a Google Doc link</b> <span class="note">(optional, use instead of the text)</span><input class="field" name="doc" type="url" placeholder="https://docs.google.com/document/d/…"></label>
+        <div class="actions"><button class="primary" type="submit">Post lesson</button></div>
+      </form>
+      <p class="note">New posts show to students right away. To hide or edit one later, change it in the Google Sheet.</p>
+    </div>
+  </section>
+
+  <section id="prof" class="list" hidden>
+    <button class="small back2" id="profBack">◀ Back to my activities</button>
+    <h2>My profile</h2>
+    <form id="profForm" class="card">
+      <div class="picrow">
+        <span id="profPic"></span>
+        <div class="actions">
+          <label class="upload">📷 Change photo<input type="file" accept="image/*" id="profFile"></label>
+          <button type="button" class="small" id="profRemove">Remove photo</button>
+        </div>
+      </div>
+      <p class="teacher" id="pfWaiting" hidden></p>
+      <label><b>Full name</b><input class="field" id="pfName" maxlength="80" required></label>
+      <div class="fixed"><span>Grade</span><b id="pfGrade">Grade 7</b></div>
+      <label><b>Section</b><input class="field" id="pfSection" maxlength="40" placeholder="e.g. Sampaguita"></label>
+      <div class="fixed"><span>School</span><b id="pfSchool">Tukuran Technical Vocational High School (TTVHS)</b></div>
+      <div class="actions"><button class="primary" type="submit" id="pfSave">Save profile</button></div>
+    </form>
+  </section>
+
+  <section id="tprof" class="list" hidden>
+    <button class="small back2" id="tprofBack">◀ Back to teacher page</button>
+    <h2>My teacher profile</h2>
+    <p class="note">Students and guests see this on every activity and lesson.</p>
+    <form id="tprofForm" class="card">
+      <div class="picrow">
+        <span id="tpPic"></span>
+        <div class="actions">
+          <label class="upload">📷 Change photo<input type="file" accept="image/*" id="tpFile"></label>
+          <button type="button" class="small" id="tpRemove">Remove photo</button>
+        </div>
+      </div>
+      <label><b>Your name as students see it</b><input class="field" id="tpName" maxlength="80" required placeholder="e.g. Mr. Juan Dela Cruz"></label>
+      <label><b>Details</b> <span class="note">(optional)</span><input class="field" id="tpDetails" maxlength="120" placeholder="e.g. Teacher III · AI Literacy, Grade 7"></label>
+      <div class="actions"><button class="primary" type="submit" id="tpSave">Save profile</button></div>
+    </form>
+  </section>
+
+  <section id="picker" hidden>
+    <div class="list">
+      <button class="small back" data-to="role" style="align-self:flex-start">◀ Back</button>
+      <h2>Tap your name</h2>
+      <input type="search" id="search" placeholder="Search your name…" aria-label="Search your name" autocomplete="off">
+      <div class="names" id="names"></div>
+    </div>
+  </section>
+
+  <section id="dash" class="list" hidden>
+    <div class="hello"><div class="me"><span id="myAvatar"></span><h1 id="hi"></h1></div>
+      <div class="actions"><button class="small" id="myProfileBtn">👤 My profile</button><button class="small" id="switch">Not you? Change name</button></div></div>
+    <p class="note" id="updating" hidden>↻ Updating…</p>
+    <div class="progress" aria-live="polite">
+      <div class="row"><span><b id="doneN">0</b> <span id="ofN"></span></span><span class="note" id="pct"></span></div>
+      <div class="bar"><i id="barFill"></i></div>
+      <span class="note" id="readN"></span>
+    </div>
+    <div class="card" id="myBadges" hidden></div>
+    <div class="seg" role="tablist" aria-label="Section">
+      <button role="tab" id="segLes" data-v="lessons" aria-selected="false">📖 Lessons</button>
+      <button role="tab" id="segAct" data-v="acts" aria-selected="true">✏️ Activities</button>
+    </div>
+
+    <div id="actView" class="list">
+      <div class="filters" role="group" aria-label="Show">
+        <button data-f="all" aria-pressed="true">All</button>
+        <button data-f="todo" aria-pressed="false">To do</button>
+        <button data-f="done" aria-pressed="false">Done</button>
+        <button class="small reload" style="margin-left:auto">↻ Refresh</button>
+      </div>
+      <div class="list" id="acts"></div>
+    </div>
+
+    <div id="lesView" class="list" hidden>
+      <div class="filters"><span class="note">Read each lesson, then do its activities.</span><button class="small reload" style="margin-left:auto">↻ Refresh</button></div>
+      <div class="list" id="lessons"></div>
+    </div>
+
+    <article id="reader" class="reader" hidden>
+      <button class="small" id="back">◀ All lessons</button>
+      <div id="readerBody"></div>
+    </article>
+  </section>
+
+  <p class="note" id="loading">Loading…</p>
+  <p class="err" id="fatal" hidden></p>
+</div>
+<div class="toast" id="toast" hidden></div>
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modalbox">
+    <div class="hello"><div><h3 id="modalTitle" style="margin:0"></h3><p class="note" id="modalSub" style="margin:2px 0 0"></p></div><button class="small" id="modalClose">✕ Close</button></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ===== Paste your Google Apps Script Web app URL between the quotes =====
+const API_URL = "https://script.google.com/macros/s/AKfycbyXw947VsITaGAZmadg9_V8KkH6XsbdhM_rSujC8YFZrd9Uai6qDNkx_CcGpQTwiEVY/exec";
+// =========================================================================
+
+const DEMO = !API_URL;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/g, u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+let toastT; const toast = m => { const t = $("toast"); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3000); };
+const S = { teacher: null, learners: [], me: "", acts: [], lessons: [], view: "acts", filter: "all", pending: {}, open: null };
+
+// ---------- Demo data (only used before the Sheet is connected) ----------
+const demo = {
+  learners: ["Sample Learner A", "Sample Learner B", "Sample Learner C"],
+  acts: [
+    { id: "d1", date: "Oct 7, 2026", title: "Sample: What is AI?", instructions: "Write 3 examples of AI you used this week.\nTake a screenshot of your answer and upload it.", needsScreenshot: true, status: "todo" },
+    { id: "d2", date: "Oct 8, 2026", title: "Sample: Spot the AI", instructions: "Look around your home. List 5 gadgets or apps that use AI. Mark as done when finished.", needsScreenshot: false, status: "done", when: "Oct 8, 2:15 PM", type: "Marked done" },
+    { id: "d3", date: "Oct 9, 2026", title: "Sample: Ask an AI a good question", instructions: "Write one clear question you would ask an AI chatbot about aquaculture. Upload a screenshot.", needsScreenshot: true, status: "redo", note: "Please make the screenshot clearer." }
+  ],
+  lessons: [
+    { id: "l1", date: "Oct 7, 2026", title: "Sample: What is Artificial Intelligence?", read: true, blocks: [
+      { type: "h1", runs: [{ t: "What is AI?" }] },
+      { type: "p", runs: [{ t: "Artificial Intelligence (AI) is when computers are made to do tasks that usually need " }, { t: "human thinking", b: true }, { t: ", like recognizing pictures, understanding speech, or making suggestions." }] },
+      { type: "h2", runs: [{ t: "Examples you already use" }] },
+      { type: "li", runs: [{ t: "Facebook and TikTok choosing which videos to show you" }] },
+      { type: "li", runs: [{ t: "Google Maps finding the fastest route" }] },
+      { type: "li", runs: [{ t: "Phone cameras that recognize faces" }] },
+      { type: "h2", runs: [{ t: "Remember" }] },
+      { type: "p", runs: [{ t: "AI learns from data. If the data is wrong or unfair, the AI can also be wrong or unfair." }] } ] },
+    { id: "l2", date: "Oct 9, 2026", title: "Sample: Using AI safely and honestly", read: false, blocks: [
+      { type: "h1", runs: [{ t: "Using AI safely and honestly" }] },
+      { type: "p", runs: [{ t: "AI tools can help you learn, but they can also make mistakes. Always check important facts with a teacher or a trusted source." }] },
+      { type: "li", runs: [{ t: "Never share your password, address or personal photos with an AI chatbot." }] },
+      { type: "li", runs: [{ t: "If you use AI for schoolwork, say so honestly." }] } ] }
+  ]
+};
+
+// ---------- API ----------
+async function apiGet(params) {
+  if (DEMO) {
+    if (params.action === "lesson") { const l = demo.lessons.find(x => x.id === params.id); return { ok: true, lesson: l }; }
+    return { ok: true, learners: demo.learners, activities: params.learner ? demo.acts.map(a => ({ ...a })) : undefined,
+      lessons: params.learner ? demo.lessons.map(({ id, date, title, read }) => ({ id, date, title, read })) : undefined };
+  }
+  const u = new URL(API_URL); Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+  let last;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const d = await fetchJSON(u.toString(), { method: "GET", redirect: "follow" }, 30000);
+      if (d && (d.ok || d.error !== "server")) return d;
+      last = d;
+    } catch (e) { last = e; }
+    await new Promise(r => setTimeout(r, 1200 * (i + 1)));
+  }
+  if (last instanceof Error) throw last;
+  return last;
+}
+async function fetchJSON(url, opts, ms) {
+  const ctl = typeof AbortController === "function" ? new AbortController() : null;
+  const t = ctl ? setTimeout(() => ctl.abort(), ms) : 0;
+  try { const r = await fetch(url, ctl ? { ...opts, signal: ctl.signal } : opts); return await r.json(); }
+  finally { clearTimeout(t); }
+}
+const store = { get(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+async function apiPost(body) {
+  if (DEMO && body.action === "read") { demo.lessons.find(x => x.id === body.activityId).read = true; return { ok: true, read: true }; }
+  if (DEMO) {
+    const a = demo.acts.find(x => x.id === body.activityId);
+    if (body.action === "undo") Object.assign(a, { status: "todo", when: "", type: "" });
+    else Object.assign(a, { status: "done", when: "just now", type: body.action === "upload" ? "Screenshot" : "Marked done", note: "" });
+    await new Promise(r => setTimeout(r, 500));
+    return { ok: true, id: a.id, status: a.status, when: a.when, type: a.type };
+  }
+  return fetchJSON(API_URL, { method: "POST", redirect: "follow", body: JSON.stringify(body) }, 60000); // text/plain: no CORS preflight
+}
+const errText = e => ({ unknown_learner: "Your name was not found. Ask your teacher.", unknown_activity: "This activity was removed. Tap Refresh.",
+  unknown_lesson: "This lesson was removed. Tap Refresh.", doc_unreadable: "This lesson can't be opened right now. Tell your teacher.",
+  needs_screenshot: "This activity needs a photo or screenshot.", too_large: "The picture is too big. Try a smaller photo.",
+  cannot_undo: "This one can't be undone anymore.", no_image: "Choose a photo or screenshot first.",
+  bad_pin: "Wrong PIN. Try again.", gone: "This submission changed. Tap Refresh.", no_title: "Please type a title.",
+  no_photo: "No photo for this one.", bad_form: "That doesn't look like a Google Form link.",
+  no_name_question: "Add a question with \"Name\" in its title (e.g. Full name) to your form first.",
+  form_unreadable: "Can't open that form. Use a form made with the same Gmail as the Sheet.",
+  use_form: "Answer the Google Form. It marks this done by itself.", form_not_ready: "This Google Form isn't ready yet. Please tell your teacher.", no_text: "Type the lesson text or paste a Google Doc link.", bad_doc: "That doesn't look like a Google Doc link." }[e] || "Something went wrong. Check your internet and try again.");
+
+// ---------- Name picker ----------
+function showPicker() {
+  showOnly("picker"); $("title").textContent = "My Activities";
+  renderNames(); $("search").value = ""; $("search").focus();
+}
+function renderNames() {
+  if (!S.learners.length) { $("names").innerHTML = `<p class="note">${S.learnersFailed ? "Could not load the class list. Check your internet, then go back and try again." : "Loading names…"}</p>`; return; }
+  const q = $("search").value.trim().toLowerCase();
+  const list = S.learners.filter(n => n.toLowerCase().includes(q));
+  $("names").innerHTML = list.length ? list.map(n => `<button data-n="${esc(n)}">${esc(n)}</button>`).join("") : `<p class="note">No name matches “${esc(q)}”.</p>`;
+}
+$("search").addEventListener("input", renderNames);
+$("names").addEventListener("click", e => { const b = e.target.closest("button[data-n]"); if (b) choose(b.dataset.n); });
+$("switch").addEventListener("click", () => { try { localStorage.removeItem("ai-lit-me"); } catch (e) {} S.me = ""; showPicker(); });
+
+async function choose(name) {
+  S.me = name; try { localStorage.setItem("ai-lit-me", name); } catch (e) {}
+  showOnly("dash");
+  $("hi").textContent = "Hi, " + name.split(" ")[0] + "!"; S.profile = null; paintMe();
+  let v = "acts"; try { v = localStorage.getItem("ai-lit-view") || "acts"; } catch (e) {}
+  setView(v === "lessons" ? "lessons" : "acts");
+  await loadMine();
+}
+
+// ---------- Dashboard ----------
+function useMine(d) {
+  if (d.teacher) S.teacher = d.teacher;
+  S.acts = d.activities || []; S.lessons = d.lessons || []; S.profile = d.profile || null;
+  S.badges = d.badges || []; S.picks = d.picks || []; S.badgesOff = d.badgesOff || [];
+  paintMe(); render(); renderLessons(); renderMyBadges();
+}
+async function loadMine(quiet) {
+  const me = S.me, key = "ai-lit-page-" + me;
+  const saved = store.get(key);
+  let showingSaved = false;
+  if (quiet !== true) {
+    if (saved && saved.d) { useMine(saved.d); showingSaved = true; setUpdating(true); }
+    else {
+      $("acts").innerHTML = `<p class="note">Loading your activities… (this can take a few seconds)</p>`;
+      $("lessons").innerHTML = `<p class="note">Loading lessons…</p>`;
+    }
+  }
+  try {
+    const d = await apiGet({ learner: me });
+    if (S.me !== me) return;
+    if (!d.ok) { if (d.error === "unknown_learner") { S.me = ""; showPicker(); toast(errText(d.error)); return; } throw new Error(d.error); }
+    useMine(d); store.set(key, { at: Date.now(), d });
+  } catch (e) {
+    if (S.me !== me) return;
+    if (showingSaved || (quiet === true && S.acts.length)) toast("Can't update right now. Showing your last saved copy.");
+    else {
+      $("acts").innerHTML = `<p class="err">Could not load your activities. Check your internet, then tap Refresh.</p>`;
+      $("lessons").innerHTML = `<p class="err">Could not load the lessons. Check your internet, then tap Refresh.</p>`;
+    }
+  } finally { if (S.me === me) setUpdating(false); }
+}
+function setUpdating(on) { $("updating").hidden = !on; }
+document.querySelectorAll(".reload").forEach(b => b.addEventListener("click", () => loadMine()));
+// When a student comes back from a Google Form, check again by itself (twice, because Google takes a few seconds).
+let formCheckAt = 0;
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible" || $("dash").hidden || !S.me) return;
+  if (!S.acts.some(a => a.formAuto && !isDone(a)) || Date.now() - formCheckAt < 8000) return;
+  formCheckAt = Date.now();
+  loadMine(true); setTimeout(() => { if (!$("dash").hidden) loadMine(true); }, 7000);
+});
+
+// ---------- Lessons ----------
+function setView(v) {
+  S.view = v; S.open = null;
+  $("segLes").setAttribute("aria-selected", String(v === "lessons")); $("segAct").setAttribute("aria-selected", String(v === "acts"));
+  $("actView").hidden = v !== "acts"; $("lesView").hidden = v !== "lessons"; $("reader").hidden = true;
+  try { localStorage.setItem("ai-lit-view", v); } catch (e) {}
+}
+$("segLes").addEventListener("click", () => setView("lessons"));
+$("segAct").addEventListener("click", () => setView("acts"));
+function renderLessons() {
+  const n = S.lessons.length, r = S.lessons.filter(l => l.read).length;
+  const ta = S.acts.length, da = S.acts.filter(isDone).length;
+  $("readN").textContent = (n ? `📖 ${r} of ${n} lessons read` : "") + (n + ta ? `${n ? " · " : ""}Overall: ${Math.round((da + r) / (n + ta) * 100)}%` : "");
+  if (!n) { $("lessons").innerHTML = `<div class="empty"><h2>No lessons yet</h2><p class="note">Your teacher hasn't posted any lessons. Check again later.</p></div>`; return; }
+  $("lessons").innerHTML = S.lessons.map(l => `<button class="lesson ${l.read ? "read" : ""}" data-id="${esc(l.id)}">
+      <span class="t"><b>${esc(l.title)}</b><span>${esc(l.date || "")}</span></span>
+      <span class="chip ${l.read ? "done" : ""}">${l.read ? "✓ Read" : "Not read"}</span></button>`).join("");
+}
+$("lessons").addEventListener("click", e => { const b = e.target.closest(".lesson"); if (b) openLesson(b.dataset.id); });
+function runsHTML(runs) {
+  return (runs || []).map(r => {
+    let h = r.u && /^https?:\/\//i.test(r.u) ? `<a href="${esc(r.u)}" target="_blank" rel="noopener">${esc(r.t)}</a>` : linkify(r.t);
+    if (r.b) h = `<b>${h}</b>`; if (r.i) h = `<i>${h}</i>`; return h;
+  }).join("");
+}
+function blocksHTML(blocks) {
+  let html = "", inList = false;
+  for (const b of blocks || []) {
+    if (b.type === "li") { if (!inList) { html += "<ul>"; inList = true; } html += `<li>${runsHTML(b.runs)}</li>`; continue; }
+    if (inList) { html += "</ul>"; inList = false; }
+    if (b.type === "img") { if (/^(https?:|data:image\/)/i.test(b.src || "")) html += `<img src="${esc(b.src)}" alt="Lesson picture" loading="lazy">`; }
+    else if (b.type === "h1") html += `<h2>${runsHTML(b.runs)}</h2>`;
+    else if (b.type === "h2") html += `<h3 style="font-size:22px">${runsHTML(b.runs)}</h3>`;
+    else if (b.type === "h3") html += `<h3>${runsHTML(b.runs)}</h3>`;
+    else html += `<p>${runsHTML(b.runs)}</p>`;
+  }
+  return html + (inList ? "</ul>" : "");
+}
+async function openLesson(id) {
+  const l = S.lessons.find(x => x.id === id); if (!l) return;
+  S.open = id; $("lesView").hidden = true; $("reader").hidden = false;
+  $("readerBody").innerHTML = `<div class="kicker">${esc(l.date || "")}</div><h1>${esc(l.title)}</h1><p class="note">Loading the lesson…</p>`;
+  window.scrollTo(0, 0);
+  try {
+    const d = await apiGet({ action: "lesson", id });
+    if (S.open !== id) return;
+    if (!d.ok) { $("readerBody").innerHTML = `<h1>${esc(l.title)}</h1><p class="err">${esc(errText(d.error))}</p>`; return; }
+    $("readerBody").innerHTML = `<div class="kicker">${esc(l.date || "")}</div><h1>${esc(l.title)}</h1>${teacherStrip(S.teacher)}${blocksHTML(d.lesson.blocks)}
+      <div class="readbtn">${l.read ? `<span class="status">✓ You've read this lesson</span>` : `<button class="primary" id="markRead">✓ I've read this lesson</button>`}</div>`;
+    $("markRead")?.addEventListener("click", async ev => {
+      const b = ev.currentTarget; b.disabled = true; b.textContent = "Saving…";
+      try {
+        const r = await apiPost({ learner: S.me, activityId: id, action: "read" });
+        if (!r.ok) { toast(errText(r.error)); b.disabled = false; b.textContent = "✓ I've read this lesson"; return; }
+        l.read = true; renderLessons(); b.outerHTML = `<span class="status">✓ You've read this lesson</span>`; toast("Great! Lesson marked as read.");
+      } catch (x) { toast(errText()); b.disabled = false; b.textContent = "✓ I've read this lesson"; }
+    });
+  } catch (e) { if (S.open === id) $("readerBody").innerHTML = `<h1>${esc(l.title)}</h1><p class="err">Could not load the lesson. Check your internet and try again.</p>`; }
+}
+$("back").addEventListener("click", () => { S.open = null; $("reader").hidden = true; $("lesView").hidden = false; });
+document.querySelectorAll(".filters button[data-f]").forEach(b => b.addEventListener("click", () => {
+  S.filter = b.dataset.f; document.querySelectorAll(".filters button[data-f]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); render();
+}));
+const isDone = a => a.status === "done" || a.status === "checked";
+
+function render() {
+  const total = S.acts.length, done = S.acts.filter(isDone).length;
+  $("doneN").textContent = done; $("ofN").textContent = `of ${total} activities done`;
+  $("pct").textContent = total ? Math.round(done / total * 100) + "%" : "";
+  $("barFill").style.width = total ? (done / total * 100) + "%" : "0";
+  const list = S.acts.filter(a => S.filter === "all" || (S.filter === "done" ? isDone(a) : !isDone(a)));
+  if (!total) { $("acts").innerHTML = `<div class="empty"><h2>No activities yet</h2><p class="note">Your teacher hasn't posted any activities. Check again later.</p></div>`; return; }
+  if (!list.length) { $("acts").innerHTML = `<p class="note">${S.filter === "done" ? "Nothing done yet. You can do it!" : "All done! Great work. 🎉"}</p>`; return; }
+  // Preserve expanded cards when a submission or status refresh re-renders the list.
+  const expanded = new Set([...$("acts").querySelectorAll("details.activity-card[open]")].map(el => el.dataset.id));
+  $("acts").innerHTML = list.map(a => cardHTML(a, expanded.has(a.id))).join("");
+}
+function previewGridHTML(items, label) {
+  return `<div class="preview-grid">${items.map((x,i)=>`<img class="preview" src="${x.url}" alt="${esc(label || "Preview")} ${i + 1}">`).join("")}</div>`;
+}
+function clearPending(id) {
+  const p = S.pending[id];
+  if (!p) return;
+  (p.files || []).forEach(x => { try { URL.revokeObjectURL(x.url); } catch (e) {} });
+  delete S.pending[id];
+}
+
+function chip(a) {
+  const status = { todo: `<span class="chip">Not done</span>`, done: `<span class="chip done">✓ Done</span>`, checked: `<span class="chip checked">✓✓ Checked by teacher</span>`, redo: `<span class="chip redo">↺ Redo</span>` }[a.status] || "";
+  const score = a.score && (a.status === "checked" || a.status === "done") ? `<span class="chip done" aria-label="Approved score: ${esc(a.score)}">Score: ${esc(a.score)}</span>` : "";
+  return `<span class="activity-status-group">${status}${score}</span>`;
+}
+function cardHTML(a, expanded = false) {
+  const p = S.pending[a.id];
+  let actions = "";
+  if ((a.status === "todo" || a.status === "redo") && a.formBroken) {
+    actions = `<p class="teacher">⚠️ This Google Form isn't ready yet. Please tell your teacher.</p>`;
+  } else if ((a.status === "todo" || a.status === "redo") && a.formUrl) {
+    const link = /^https:\/\//.test(a.formUrl) ? `<a class="btnlink" href="${esc(a.formUrl)}" target="_blank" rel="noopener">📝 Answer the Google Form</a>` : "";
+    actions = a.formAuto
+      ? `<div class="actions">${link}<button class="small" data-do="check">↻ I already answered</button></div>
+         <p class="note">Your name is filled in for you. After you submit, come back here. This turns ✓ Done by itself.</p>`
+      : `<div class="actions">${link}<button data-do="done">Mark as done</button></div><p class="note">Answer the form, then tap Mark as done.</p>`;
+  } else if (a.status === "todo" || a.status === "redo") {
+    if (a.needsScreenshot) {
+      actions = p ? `${previewGridHTML(p.files || [], "Your photo preview")}
+          <div class="actions"><button class="primary" data-do="send">Send ${((p.files||[]).length > 1 ? "photos" : "photo")}</button><button data-do="clear">Choose another</button></div>`
+        : `<div class="actions"><label class="upload">📷 Upload photo or screenshot(s)<input type="file" accept="image/*" data-do="pick" multiple></label></div><div class="upload-note">You may upload up to 3 pictures for this activity.</div>`;
+    } else actions = `<div class="actions"><button class="primary" data-do="done">Mark as done</button></div>`;
+  } else {
+    const what = a.type === "Screenshot" ? "Photo sent" : a.type === "Google Form" ? "Form answered" : "Marked done";
+    actions = `${a.score ? `<div class="score">Score: <b>${esc(a.score)}</b></div>` : ""}<div class="actions"><span class="status">${what}${a.when ? " · " + esc(a.when) : ""}</span>
+      ${a.status === "done" && a.type === "Marked done" ? `<button class="small" data-do="undo">Undo</button>` : ""}
+      ${a.status === "done" && a.type === "Screenshot" ? `<label class="upload" style="padding:6px 12px;font-size:14px">Send new photo(s)<input type="file" accept="image/*" data-do="pick" multiple></label>` : ""}</div>
+      ${p ? `${previewGridHTML(p.files || [], "Your new photo preview")}<div class="actions"><button class="primary" data-do="send">Send new ${((p.files||[]).length > 1 ? "photos" : "photo")}</button><button data-do="clear">Cancel</button></div>` : ""}`;
+  }
+  const category = a.formUrl || a.formBroken ? " · 📝 Google Form" : a.needsScreenshot ? " · 📷 Photo / screenshot" : "";
+  return `<details class="card activity-card ${a.status}" data-id="${esc(a.id)}" ${expanded ? "open" : ""}>
+    <summary class="activity-head">
+      <span class="activity-main"><strong>${esc(a.title)}</strong><small>${esc(a.date || "")}${category}</small></span>
+      ${chip(a)}<span class="activity-chevron" aria-hidden="true">⌄</span>
+    </summary>
+    <div class="activity-body">
+      ${teacherStrip(S.teacher)}
+      ${a.instructions ? `<p class="instr">${linkify(a.instructions)}</p>` : ""}
+      ${a.status === "redo" ? `<div class="teacher"><b>Your teacher asked you to redo this.</b>${a.note ? " " + esc(a.note) : ""}</div>` : ""}
+      ${a.status === "checked" && a.note ? `<div class="teacher"><b>Teacher:</b> ${esc(a.note)}</div>` : ""}
+      ${actions}
+    </div>
+  </details>`;
+}
+
+$("acts").addEventListener("change", e => {
+  const inp = e.target.closest("input[data-do=pick]"); if (!inp || !inp.files || !inp.files.length) return;
+  const id = inp.closest(".card").dataset.id;
+  const files = Array.from(inp.files).slice(0, 3);
+  if (!files.length) return;
+  if (files.some(f => !String(f.type || "").startsWith("image/"))) { toast("Please choose picture files only."); return; }
+  clearPending(id);
+  S.pending[id] = { files: files.map(f => ({ file: f, url: URL.createObjectURL(f) })) };
+  if (inp.files.length > 3) toast("Only the first 3 pictures will be used.");
+  render();
+});
+$("acts").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-do]"); if (!b) return;
+  const id = b.closest(".card").dataset.id, a = S.acts.find(x => x.id === id), act = b.dataset.do;
+  if (act === "check") { b.disabled = true; b.textContent = "Checking…"; await loadMine(true); const n = S.acts.find(x => x.id === id); if (n && !isDone(n)) toast("Not received yet. Make sure you tapped Submit on the form, then wait a few seconds."); return; }
+  if (act === "clear") { clearPending(id); render(); return; }
+  b.disabled = true; const label = b.textContent;
+  try {
+    let body = { learner: S.me, activityId: id, action: act === "send" ? "upload" : act };
+    if (act === "send") {
+      b.textContent = "Sending…";
+      const picks = (S.pending[id] && S.pending[id].files) ? S.pending[id].files : [];
+      const imgs = [];
+      for (const item of picks) imgs.push(await toBase64Jpeg(item.file));
+      body.images = imgs.map(x => ({ data: x.data, mime: x.mime }));
+      if (imgs.length === 1) { body.image = imgs[0].data; body.mime = imgs[0].mime; }
+    }
+    else b.textContent = act === "undo" ? "Undoing…" : "Saving…";
+    const r = await apiPost(body);
+    if (!r.ok) { toast(errText(r.error)); b.disabled = false; b.textContent = label; return; }
+    Object.assign(a, { status: r.status, when: r.when, type: r.type, note: r.note || "", score: r.score || "" });
+    if (S.pending[id]) clearPending(id);
+    store.set("ai-lit-page-" + S.me, { at: Date.now(), d: { activities: S.acts, lessons: S.lessons, profile: S.profile, teacher: S.teacher, badges: S.badges, picks: S.picks, badgesOff: S.badgesOff } });
+    render(); renderLessons(); toast(act === "undo" ? "Undone" : act === "send" ? "Photo sent! ✓" : "Marked as done ✓");
+  } catch (err) { toast(errText()); b.disabled = false; b.textContent = label; }
+});
+
+async function toBase64Jpeg(file) {
+  let blob = file, mime = file.type;
+  try {
+    const bmp = await createImageBitmap(file);
+    const s = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas"); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    blob = await new Promise(r => c.toBlob(b => r(b || file), "image/jpeg", 0.85)); mime = blob.type || "image/jpeg";
+  } catch (e) {}
+  const dataUrl = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+  return { data: String(dataUrl).split(",")[1], mime };
+}
+
+// ---------- Screens ----------
+const SCREENS = ["role", "pinBox", "teach", "picker", "dash", "prof", "tprof"];
+function showOnly(id) { SCREENS.forEach(x => $(x).hidden = x !== id); window.scrollTo(0, 0); }
+const ss = { get(k) { try { return sessionStorage.getItem(k) || ""; } catch (e) { return ""; } },
+  set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }, del(k) { try { sessionStorage.removeItem(k); } catch (e) {} } };
+function showRole() { showOnly("role"); $("title").textContent = "AI Literacy Class"; }
+document.querySelectorAll(".back").forEach(b => b.addEventListener("click", showRole));
+$("asStudent").addEventListener("click", () => {
+  let saved = ""; try { saved = localStorage.getItem("ai-lit-me") || ""; } catch (e) {}
+  if (saved && S.learners.includes(saved)) choose(saved); else showPicker();
+});
+$("asTeacher").addEventListener("click", () => {
+  if (DEMO) { toast("Connect the Google Sheet first (API_URL)."); return; }
+  showOnly("pinBox"); $("title").textContent = "Teacher"; $("pinErr").hidden = true; $("pin").value = ""; $("pin").focus();
+});
+
+const initials = n => { const w = String(n || "").trim().split(/\s+/).filter(Boolean); return ((w[0] || "?")[0] + (w.length > 1 ? w[w.length - 1][0] : "")).toUpperCase(); };
+const avatarHTML = (pr, size = "") => `<span class="avatar ${size}">${pr && /^data:image\//.test(pr.photo || "") ? `<img src="${esc(pr.photo)}" alt="">` : esc(initials(pr && pr.fullName))}</span>`;
+const BADGES = [
+  { id: "bookworm", i: "📖", n: "Bookworm", how: "Read all lessons" },
+  { id: "alldone", i: "⭐", n: "All Work Done", how: "Finish everything" },
+  { id: "nevergiveup", i: "🔁", n: "Never Give Up", how: "Redo an activity" },
+  { id: "aboutme", i: "👤", n: "All About Me", how: "Add photo + section" },
+  { id: "approved", i: "✅", n: "Teacher Approved", how: "Get 3 ✓✓ Checked" },
+  { id: "perfect", i: "🎯", n: "Perfect Score", how: "Full marks on a quiz" },
+  { id: "levelup", i: "📈", n: "Level Up", how: "Beat your last test score" },
+  { id: "pick", i: "🌟", n: "Teacher's Pick", how: "Do excellent work" }];
+const activeBadges = off => BADGES.filter(b => (off || []).indexOf(b.id) < 0);
+const miniBadges = ids => (ids && ids.length) ? `<span class="mini-b" title="${esc(ids.map(id => (BADGES.find(b => b.id === id) || {}).n).join(", "))}">${ids.map(id => (BADGES.find(b => b.id === id) || {}).i || "").join("")}</span>` : "";
+function renderMyBadges() {
+  const list = activeBadges(S.badgesOff), got = S.badges || [];
+  if (!list.length) { $("myBadges").hidden = true; return; }
+  $("myBadges").hidden = false;
+  $("myBadges").innerHTML = `<div class="row" style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h3 style="margin:0;font:600 19px var(--display)">🏅 My badges</h3><span class="note">${list.filter(b => got.includes(b.id)).length} of ${list.length} earned</span></div>
+    <div class="shelf">${list.map(b => got.includes(b.id) ? `<div class="badge"><span class="i">${b.i}</span><b>${esc(b.n)}</b></div>`
+      : `<div class="badge off"><span class="i">${b.i}</span><b>${esc(b.n)}</b><span class="how">${esc(b.how)}</span></div>`).join("")}</div>
+    ${(S.picks || []).map(x => `<div class="pick">🌟 <b>Teacher's Pick${x.activity ? " · " + esc(x.activity) : ""}:</b> "${esc(x.note)}" <span class="note">${esc(x.date || "")}</span></div>`).join("")}`;
+}
+const teacherStrip = (t, big) => t && t.name ? `<div class="tstrip ${big ? "big" : ""}">${avatarHTML({ fullName: t.name, photo: t.photo }, big ? "" : "sm")}
+  <div><span class="lbl">${big ? "Class teacher" : "Teacher"}</span><b>${esc(t.name)}</b>${t.details ? `<span class="det">${esc(t.details)}</span>` : ""}</div></div>` : "";
+$("asGuest").addEventListener("click", () => { if (DEMO) { toast("Connect the Google Sheet first (API_URL)."); return; } T.mode = "guest"; T.pin = ""; openTeacher(); });
+
+// ---------- Teacher & guest ----------
+const T = { mode: "teacher", pin: "", data: null, status: "Submitted", act: "", tab: "check", photos: {}, stu: "" };
+$("pinForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const pin = $("pin").value.trim(); if (!pin) return;
+  const b = $("pinGo"); b.disabled = true; b.textContent = "Checking…"; $("pinErr").hidden = true;
+  try {
+    const r = await apiPost({ action: "t_login", pin });
+    if (!r.ok) { $("pinErr").textContent = errText(r.error); $("pinErr").hidden = false; return; }
+    T.mode = "teacher"; T.pin = pin; ss.set("ai-lit-pin", pin); openTeacher();
+  } catch (x) { $("pinErr").textContent = errText(); $("pinErr").hidden = false; }
+  finally { b.disabled = false; b.textContent = "Sign in"; }
+});
+$("logout").addEventListener("click", () => { T.pin = ""; T.data = null; T.photos = {}; T.stu = ""; ss.del("ai-lit-pin"); showRole(); });
+
+function openTeacher() {
+  const g = T.mode === "guest";
+  showOnly("teach"); $("title").textContent = "AI Literacy Class";
+  $("tHello").textContent = g ? "👀 Guest view" : "👋 Hello, Teacher!";
+  $("logout").textContent = g ? "◀ Exit" : "Sign out"; $("syncRow").hidden = g; $("syncOut").hidden = true; $("tMeBtn").hidden = g; $("tTeacherCard").innerHTML = "";
+  $("guestNote").hidden = !g; $("tabPost").hidden = g; $("tabAi").hidden = g; $("tTabs").classList.toggle("guest", g); $("tTabs").classList.toggle("ai-tabs", !g);
+  $("checkLbl").textContent = g ? "Work" : "Check";
+  T.status = g ? "all" : "Submitted"; T.stu = ""; T.photos = {}; selectedAnswersLearner = ""; selectedAnswersSearch = "";
+  $("tStuOne").hidden = true; $("tStuList").hidden = false;
+  document.querySelectorAll("[data-s]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.s === T.status)));
+  T.tab = "check";
+  setTTab(T.tab); loadTeacher();
+}
+function setTTab(t) {
+  T.tab = t;
+  document.querySelectorAll("[data-t]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.t === t)));
+  $("tCheck").hidden = t !== "check"; $("tProg").hidden = t !== "prog"; $("tPost").hidden = t !== "post"; $("tStu").hidden = t !== "stu"; $("tAi").hidden = t !== "ai";
+  if (t === "ai" && T.mode === "teacher") loadAiCatalog();
+}
+document.querySelectorAll("[data-t]").forEach(b => b.addEventListener("click", () => { if (b.dataset.t === "ai" && T.mode !== "teacher") return; setTTab(b.dataset.t); }));
+document.querySelectorAll(".treload").forEach(b => b.addEventListener("click", loadTeacher));
+
+async function loadTeacher() {
+  $("tSubs").innerHTML = `<p class="note">Loading submissions…</p>`; $("tGrid").innerHTML = `<p class="note" style="padding:12px">Loading…</p>`;
+  try {
+    const d = T.mode === "guest" ? await apiGet({ action: "guest" }) : await apiPost({ action: "t_overview", pin: T.pin });
+    if (!d.ok) { if (d.error === "bad_pin") { ss.del("ai-lit-pin"); T.pin = ""; showRole(); toast("Please sign in again."); return; } throw new Error(d.error); }
+    T.data = d; T.work = {}; T.allwork = null; if (d.teacher) S.teacher = d.teacher;
+    $("tTeacherCard").innerHTML = teacherStrip(S.teacher, true);
+    renderActFilter(); renderSubs(); renderGrid(); renderStudents(); renderPics(); renderFormWarn(); renderBadgeSet();
+    if (!$("pvAns").hidden) loadAllWork(true);
+  } catch (e) {
+    $("tSubs").innerHTML = `<p class="err">Could not load. Check your internet, then tap Refresh.</p>`; $("tGrid").innerHTML = "";
+  }
+}
+function renderActFilter() {
+  const acts = T.data.activities;
+  if (T.act && !acts.some(a => a.id === T.act)) T.act = "";
+  $("tActFilter").innerHTML = `<option value="">All activities</option>` + acts.map(a => `<option value="${esc(a.id)}"${a.id === T.act ? " selected" : ""}>${esc(a.title)}</option>`).join("");
+}
+$("tActFilter").addEventListener("change", e => { T.act = e.target.value; renderSubs(); });
+document.querySelectorAll("[data-s]").forEach(b => b.addEventListener("click", () => {
+  T.status = b.dataset.s; document.querySelectorAll("[data-s]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); renderSubs();
+}));
+
+function renderSubs() {
+  const subs = T.data.submissions;
+  const n = subs.filter(s => s.status === "Submitted").length; $("cntNew").textContent = n || "";
+  const g = T.mode === "guest";
+  const list = subs.filter(s => (T.status === "all" || s.status === T.status) && (!T.act || s.activityId === T.act));
+  if (!list.length) {
+    $("tSubs").innerHTML = `<div class="empty"><p class="note">${T.status === "Submitted" ? "Nothing to check right now. 🎉" : "No submissions here."}</p></div>`; return;
+  }
+  $("tSubs").innerHTML = list.map(s => {
+    const st = s.status.toLowerCase();
+    const chipTxt = { submitted: "Needs checking", checked: "✓✓ Checked", redo: "↺ Redo" }[st] || esc(s.status);
+    const ph = T.photos[s.row];
+    return `<article class="card sub ${st === "checked" ? "checked" : st === "redo" ? "redo" : ""}" data-row="${s.row}">
+      <div class="meta"><span>${esc(s.when)} · ${s.photo ? "📷 Photo" : s.type === "Google Form" ? "📝 Answered the Google Form" : "Marked done"}</span><span class="chip ${st}">${chipTxt}</span></div>
+      <p class="who"><button class="linkbtn" data-stu="${esc(s.learner)}">${esc(s.learner)}</button></p><p class="what">${esc(s.activity)}</p>
+      ${s.score ? `<div class="score">Score: <b>${esc(s.score)}</b></div>` : ""}
+      ${s.attempts > 1 ? `<span class="attempts">🔁 Answered ${s.attempts} times (first answer counts)</span>` : ""}
+      ${s.photo ? (ph && ph.length ? `<div class="preview-grid">${ph.map((img,i)=>`<img class="photo" src="${img.src}" alt="Photo ${i+1} from ${esc(s.learner)}">`).join("")}</div>` : "")
+        + `<div class="actions">${ph && ph.length ? "" : `<button class="small" data-x="photo">Show photo</button>`}${/^https:\/\//.test(s.url) ? `<a href="${esc((String(s.url).split(/\n+/)[0] || s.url))}" target="_blank" rel="noopener">Open in Drive</a>` : ""}</div>` : ""}
+      ${g ? "" : `<textarea class="field" rows="2" placeholder="Note for the student (optional)" aria-label="Note for ${esc(s.learner)}">${esc(s.note)}</textarea>
+      <div class="actions"><button class="primary" data-x="Checked">✓ Checked</button><button data-x="Redo">↺ Redo</button>${activeBadges(T.data.badgesOff).some(b => b.id === "pick") ? `<button class="pickbtn" data-x="pick">${((T.data.picks || {})[s.learner] || []).some(x => x.activityId === s.activityId) ? "🌟 Picked ✓" : "🌟 Teacher's Pick"}</button>` : ""}</div>`}
+    </article>`;
+  }).join("");
+}
+$("tSubs").addEventListener("click", async e => {
+  const sb = e.target.closest("[data-stu]"); if (sb) { openStudent(sb.dataset.stu); return; }
+  const b = e.target.closest("button[data-x]"); if (!b) return;
+  const card = b.closest(".sub"), row = Number(card.dataset.row), s = T.data.submissions.find(x => x.row === row);
+  if (!s) return;
+  const label = b.textContent; b.disabled = true;
+  try {
+    if (b.dataset.x === "photo") {
+      b.textContent = "Loading…";
+      const r = T.mode === "guest" ? await apiGet({ action: "photo", row }) : await apiPost({ action: "t_photo", pin: T.pin, row });
+      if (!r.ok) { toast(errText(r.error)); b.disabled = false; b.textContent = label; return; }
+      T.photos[row] = (r.images && r.images.length) ? r.images : (r.src ? [{ src: r.src }] : []); renderSubs(); return;
+    }
+    const note = card.querySelector("textarea").value.trim();
+    if (b.dataset.x === "pick") {
+      if (((T.data.picks || {})[s.learner] || []).some(x => x.activityId === s.activityId)) { toast("Already a Teacher's Pick. Remove it from the student's profile."); b.disabled = false; return; }
+      b.textContent = "Saving…";
+      const r = await apiPost({ action: "t_pick", pin: T.pin, learner: s.learner, activityId: s.activityId, note: note || "Great work!" });
+      if (!r.ok) { toast(errText(r.error)); b.disabled = false; b.textContent = label; return; }
+      T.data.picks = r.picks;
+      const pr = T.data.progress.find(x => x.learner === s.learner); if (pr && !(pr.badges || []).includes("pick")) pr.badges = (pr.badges || []).concat("pick");
+      renderSubs(); renderStudents(); toast("🌟 Teacher's Pick given" + (note ? "" : " (tip: type a note first next time)"));
+      return;
+    }
+    b.textContent = "Saving…";
+    const r = await apiPost({ action: "t_review", pin: T.pin, row, learner: s.learner, activityId: s.activityId, status: b.dataset.x, note });
+    if (!r.ok) { toast(errText(r.error)); b.disabled = false; b.textContent = label; return; }
+    s.status = r.status; s.note = note;
+    const latest = T.data.submissions.find(x => x.learner === s.learner && x.activityId === s.activityId);
+    if (latest === s) {
+      const p = T.data.progress.find(x => x.learner === s.learner);
+      if (p) { p.cells[s.activityId] = s.status; p.done = Object.values(p.cells).filter(v => v !== "Redo").length; }
+    }
+    renderSubs(); renderGrid(); toast(s.status === "Checked" ? (r.gradingQueued ? "Checked ✓ · AI grading queued; refresh Progress for score" : "Marked as checked ✓") : "Sent back for redo ↺");
+  } catch (x) { toast(errText()); b.disabled = false; b.textContent = label; }
+});
+
+function renderGrid() {
+  const { activities: acts, progress, lessons } = T.data;
+  if (!progress.length) { $("tGrid").innerHTML = `<p class="note" style="padding:12px">No learners found.</p>`; $("classSum").innerHTML = ""; return; }
+  const total = acts.length + lessons.length;
+  const pctOf = p => typeof p.pct === "number" ? p.pct : (total ? Math.round((p.done + p.read) / total * 100) : 0);
+  const avg = Math.round(progress.reduce((t, p) => t + pctOf(p), 0) / progress.length);
+  const allDone = progress.filter(p => total && pctOf(p) === 100).length;
+  $("classSum").innerHTML = `<div class="row"><span><b>${avg}%</b> class average</span><span class="note">${allDone} of ${progress.length} students at 100%</span></div>
+    <div class="bar"><i style="width:${avg}%"></i></div>
+    <span class="note">Counts only what students can see: ${acts.length} activit${acts.length === 1 ? "y" : "ies"} + ${lessons.length} lesson${lessons.length === 1 ? "" : "s"}. Hidden ones are not counted.</span>`;
+  const head = `<tr><th>Learner</th><th>Overall</th><th>Activities</th><th>Lessons read</th>${acts.map(a => `<th title="${esc(a.title)}">${esc(a.title)}</th>`).join("")}</tr>`;
+  const pctCell = v => `<td class="pct"><span class="mini"><i style="width:${v}%"></i></span>${v}%</td>`;
+  const body = progress.map(p => `<tr><td><button class="linkbtn" data-stu="${esc(p.learner)}">${esc(p.learner)}</button></td>${pctCell(pctOf(p))}<td>${p.done} / ${acts.length}</td><td>${p.read} / ${lessons.length}</td>${acts.map(a => {
+    const v = p.cells[a.id], sc = (p.scores || {})[a.id];
+    const mark = v === "Checked" ? "✓✓" : "✓";
+    return v === "Redo" ? `<td class="redo">↺</td>` : v ? `<td class="ok">${sc ? esc(sc) : mark}</td>` : `<td></td>`;
+  }).join("")}</tr>`).join("");
+  const actPct = a => Math.round(progress.filter(p => p.cells[a.id] && p.cells[a.id] !== "Redo").length / progress.length * 100);
+  const foot = `<tr class="foot"><td>Class</td><td>${avg}%</td><td></td><td></td>${acts.map(a => `<td>${actPct(a)}% done</td>`).join("")}</tr>`;
+  $("tGrid").innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+}
+
+// Summative Analysis: uses already-loaded class progress and recorded scores only.
+// No Google Forms response scan is required, so this works in Teacher and Guest views.
+function parseSummativeScore(raw) {
+  const v = String(raw == null ? "" : raw).trim();
+  const match = v.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+  if (!match) return null;
+  const earned = Number(match[1]), possible = Number(match[2]);
+  if (!Number.isFinite(earned) || !Number.isFinite(possible) || possible <= 0 || earned < 0 || earned > possible) return null;
+  return { earned, possible, pct: earned / possible * 100 };
+}
+function summativeStats(activity, progress) {
+  const results = progress.map(p => parseSummativeScore((p.scores || {})[activity.id])).filter(Boolean);
+  const n = results.length;
+  if (!n) return { n: 0, missing: progress.length, mps: null, sd: null, low: null, high: null, earned: 0, possible: 0 };
+  // MPS = mean of each student's percentage score; population SD uses those same percentages.
+  const mps = results.reduce((sum, x) => sum + x.pct, 0) / n;
+  const sd = Math.sqrt(results.reduce((sum, x) => sum + (x.pct - mps) ** 2, 0) / n);
+  return { n, missing: progress.length - n, mps, sd,
+    low: Math.min(...results.map(x => x.pct)), high: Math.max(...results.map(x => x.pct)),
+    earned: results.reduce((sum,x) => sum + x.earned,0), possible: results.reduce((sum,x) => sum + x.possible,0),
+    scores: results.map(x=>x.pct) };
+}
+function renderSummativeAnalysis() {
+  const el = $("mpsOut");
+  if (!T.data) { el.innerHTML = `<p class="note">Load class progress first.</p>`; return; }
+  const progress = T.data.progress || [];
+  const tests = (T.data.activities || []).filter(a => /summative(?:\s+test|\s+assessment)?/i.test(a.title));
+  if (!tests.length) { el.innerHTML = `<p class="note">No visible summative tests found in Activities.</p>`; return; }
+  const data = tests.map(a => ({ a, stat: summativeStats(a, progress) }));
+  const valid = data.filter(x => x.stat.n > 0);
+  const totalAttempts = valid.reduce((sum,x) => sum + x.stat.n, 0);
+  const earned = valid.reduce((sum,x) => sum + x.stat.earned, 0);
+  const possible = valid.reduce((sum,x) => sum + x.stat.possible, 0);
+  const overall = possible > 0 ? 100 * earned / possible : null;
+  const fmt = v => v == null ? '—' : `${v.toFixed(1)}%`;
+  const sdFmt = v => v == null ? '—' : `${v.toFixed(1)} pp`;
+  const testRows = data.map(({a,stat}) => `<tr><td><b>${esc(a.title)}</b></td><td>${stat.n} / ${progress.length}</td><td><b>${fmt(stat.mps)}</b></td><td>${sdFmt(stat.sd)}</td></tr>`).join('');
+  const details = data.map(({a,stat}) => `<details class="card" style="gap:8px"><summary><b>${esc(a.title)}</b> <span class="note">${stat.n} taker${stat.n===1?'':'s'}</span></summary>
+    <div class="mpscards" style="margin-top:12px">
+      <div class="mpscard"><span class="note">MPS</span><div class="metric">${fmt(stat.mps)}</div></div>
+      <div class="mpscard"><span class="note">Population SD</span><div class="metric">${sdFmt(stat.sd)}</div></div>
+      <div class="mpscard"><span class="note">Highest</span><div class="metric">${fmt(stat.high)}</div></div>
+      <div class="mpscard"><span class="note">Lowest</span><div class="metric">${fmt(stat.low)}</div></div>
+    </div><p class="note">Valid scores: ${stat.n} · Missing / invalid scores: ${stat.missing} · Total enrolled: ${progress.length}</p>
+  </details>`).join('');
+  el.innerHTML = `<div class="list" style="gap:14px">
+    <div class="mpscards">
+      <div class="mpscard"><span class="note">Overall weighted MPS</span><div class="metric">${fmt(overall)}</div></div>
+      <div class="mpscard"><span class="note">Summative tests</span><div class="metric">${tests.length}</div></div>
+      <div class="mpscard"><span class="note">Recorded test scores</span><div class="metric">${totalAttempts}</div></div>
+      <div class="mpscard"><span class="note">Students enrolled</span><div class="metric">${progress.length}</div></div>
+    </div>
+    <p class="note">Overall MPS is weighted by possible points across valid scores; each test's MPS is the average of takers' percentage scores. SD measures the variation in percentage points (population SD). Missing, invalid, and ungraded results are excluded, not treated as zero.</p>
+    <div class="tablewrap"><table class="mps-table"><thead><tr><th>Summative test</th><th>Takers</th><th>MPS</th><th>SD</th></tr></thead><tbody>${testRows}</tbody></table></div>
+    <h3>Test details</h3>
+    ${details}
+    <p class="note">Scores must be saved in the Submissions tab as "earned / possible" (for example, 8 / 10). If a form score was not recorded, it cannot be included automatically. Only activities marked as visible to students are shown here.</p>
+  </div>`;
+}
+
+// ---------- Answers & scores table ----------
+document.querySelectorAll("[data-pv]").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-pv]").forEach(x => x.setAttribute("aria-selected", String(x === b)));
+  const pv = b.dataset.pv;
+  $("pvSum").hidden = pv !== "sum";
+  $("pvAns").hidden = pv !== "ans";
+  $("pvMps").hidden = pv !== "mps";
+  if (pv === "ans") loadAllWork();
+  if (pv === "mps") renderSummativeAnalysis();
+}));
+// Answers & Scores: load a student roster first; fetch individual answers only on demand.
+let selectedAnswersLearner = "";
+let selectedAnswersSearch = "";
+let selectedAnswersRequest = 0;
+T.answerOne = {};
+function loadAllWork(force) {
+  if (force) T.answerOne = {};
+  if (!T.data) { $("tWork").innerHTML = `<p class="note">Load class progress first.</p>`; return; }
+  if (selectedAnswersLearner && T.data.progress.some(p => p.learner === selectedAnswersLearner)) {
+    showStudentAnswers(selectedAnswersLearner);
+  } else {
+    selectedAnswersLearner = "";
+    showAnswersRoster();
+  }
+}
+function showAnswersRoster() {
+  if (!T.data) return;
+  const progress = T.data.progress || [];
+  const q = selectedAnswersSearch.trim().toLowerCase();
+  const found = progress.filter(p => (p.learner + " " + ((p.profile || {}).fullName || "") + " " + ((p.profile || {}).section || "")).toLowerCase().includes(q));
+  const cards = found.map(p => `<button class="stucard" data-ans-learner="${esc(p.learner)}">
+    ${avatarHTML(p.profile || {})}<span class="t"><b>${esc((p.profile || {}).fullName || p.learner)}</b>
+    <span>${p.done || 0} activities done · ${p.read || 0} lessons read</span></span>
+    <span class="chip ${p.pct === 100 ? "done" : ""}" style="white-space:nowrap">${Number(p.pct) || 0}%</span>
+    <span aria-hidden="true" style="margin-left:auto;color:var(--accent)">›</span></button>`).join("");
+  $("tWork").innerHTML = `<div class="list" style="padding:12px;gap:12px">
+    <p class="note">Select a student to see their recorded scores and activities. Written answers load only when opened.</p>
+    <input class="field" id="answersSearch" type="search" placeholder="Search student name…" aria-label="Search student name" value="${esc(selectedAnswersSearch)}">
+    <div class="stugrid" id="answersNames">${cards || `<p class="note">No matching students.</p>`}</div>
+  </div>`;
+}
+function showStudentAnswers(name) {
+  if (!T.data) return;
+  const p = (T.data.progress || []).find(p => p.learner === name);
+  if (!p) { selectedAnswersLearner = ""; showAnswersRoster(); return; }
+  selectedAnswersLearner = name;
+  const acts = T.data.activities || [];
+  const state = p.cells || {}, scores = p.scores || {};
+  const status = s => s === 'Redo' ? `<span class="chip redo">↺ Redo</span>` : s === 'Checked' ? `<span class="chip checked">✓✓ Checked</span>` : s ? `<span class="chip done">✓ Done</span>` : `<span class="chip">Not done</span>`;
+  const rows = acts.map(a => {
+    const s = state[a.id] || "";
+    const score = scores[a.id] ? `<span class="score inline"><b>${esc(scores[a.id])}</b></span>` : "";
+    const action = s ? `<button class="small" data-answer-one="${esc(a.id)}" data-learner="${esc(name)}">${score ? 'View details' : 'View answer / work'}</button>` : "";
+    return `<div class="card" style="gap:8px;padding:13px 15px">
+      <div class="meta"><span>${esc(a.date || "")}</span>${status(s)}</div>
+      <b style="font:600 17px/1.35 var(--display)">${esc(a.title)}</b>
+      <div class="actions">${score}${action}</div>
+      <div class="workx" data-answer-box="${esc(a.id)}" hidden></div>
+    </div>`;
+  }).join("");
+  $("tWork").innerHTML = `<div class="list" style="padding:12px;gap:12px">
+    <button class="small back2" data-back-answers="1" style="align-self:flex-start">◀ All students</button>
+    <h2 style="overflow-wrap:anywhere">${esc((p.profile || {}).fullName || name)}</h2>
+    <p class="note"><b>${Number(p.pct) || 0}% overall progress</b> · ${p.done || 0} of ${acts.length} activities completed · ${p.read || 0} lessons read.</p>
+    ${rows || `<p class="note">No activities posted.</p>`}
+  </div>`;
+}
+async function openOneAnswer(learner, id, button) {
+  const box = [...$("tWork").querySelectorAll('[data-answer-box]')].find(x => x.dataset.answerBox === id);
+  if (!box) return;
+  if (!box.hidden) { box.hidden = true; button.textContent = 'View answer / work'; return; }
+  box.hidden = false;
+  const key = learner + '|' + id;
+  const display = d => {
+    if (d.quiz) return `<p class="note">Quiz: the recorded score is shown above.</p>`;
+    if (d.photoRow) return `<button class="small" data-answer-photo="${d.photoRow}" data-learner="${esc(learner)}">📷 Show photo</button>`;
+    if (d.answers && d.answers.length) return d.answers.map(x => `<div class="qa" style="margin-top:8px;padding:10px 12px;background:var(--bg);border-radius:10px"><b>${esc(x.q)}</b><p style="margin:4px 0 0;white-space:pre-wrap">${esc(x.a)}</p></div>`).join('');
+    if (d.answersError) return `<p class="err">This form's answers could not be opened. Try again later.</p>`;
+    return `<p class="note">No detailed response found for this student. The recorded completion status is unchanged.</p>`;
+  };
+  if (T.answerOne[key]) { box.innerHTML = display(T.answerOne[key]); button.textContent = 'Hide details'; return; }
+  box.innerHTML = `<p class="note">Loading this student's answer…</p>`;
+  button.disabled = true;
+  try {
+    const d = await apiGet({ action: 'answerone', learner, id });
+    if (!d || !d.ok) throw new Error((d && d.error) || 'Could not load');
+    T.answerOne[key] = d;
+    if (selectedAnswersLearner !== learner || !box.isConnected) return;
+    box.innerHTML = display(d); button.textContent = 'Hide details';
+  } catch (e) {
+    if (box.isConnected) box.innerHTML = `<p class="err">Could not load this answer. Close and retry.</p>`;
+    console.warn('Single answer failed:', e);
+  } finally { if (button.isConnected) button.disabled = false; }
+}
+function openModal(title, sub, html) { $("modalTitle").textContent = title; $("modalSub").textContent = sub; $("modalBody").innerHTML = html; $("modal").hidden = false; $("modalClose").focus(); }
+function closeModal() { $("modal").hidden = true; $("modalBody").innerHTML = ""; }
+$("modalClose").addEventListener("click", closeModal);
+$("modal").addEventListener("click", e => { if (e.target === $("modal")) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("modal").hidden) closeModal(); });
+$("tWork").addEventListener("input", e => {
+  if (e.target.id !== "answersSearch") return;
+  selectedAnswersSearch = e.target.value;
+  // Preserve focus and caret by updating just the name grid.
+  const progress = (T.data && T.data.progress) || [];
+  const q = selectedAnswersSearch.trim().toLowerCase();
+  const names = progress.filter(p => (p.learner + " " + ((p.profile || {}).fullName || "") + " " + ((p.profile || {}).section || "")).toLowerCase().includes(q));
+  $("answersNames").innerHTML = names.map(p => `<button class="stucard" data-ans-learner="${esc(p.learner)}">${avatarHTML(p.profile || {})}<span class="t"><b>${esc((p.profile || {}).fullName || p.learner)}</b><span>${p.done || 0} activities done · ${p.read || 0} lessons read</span></span><span class="chip ${p.pct === 100 ? "done" : ""}" style="white-space:nowrap">${Number(p.pct) || 0}%</span><span aria-hidden="true" style="margin-left:auto;color:var(--accent)">›</span></button>`).join('') || `<p class="note">No matching students.</p>`;
+});
+$("tWork").addEventListener("click", async e => {
+  const name = e.target.closest('[data-ans-learner]');
+  if (name) { showStudentAnswers(name.dataset.ansLearner); return; }
+  if (e.target.closest('[data-back-answers]')) { selectedAnswersLearner = ''; showAnswersRoster(); return; }
+  const answer = e.target.closest('[data-answer-one]');
+  if (answer) { await openOneAnswer(answer.dataset.learner, answer.dataset.answerOne, answer); return; }
+  const photo = e.target.closest('[data-answer-photo]');
+  if (photo) {
+    openModal(photo.dataset.learner, 'Student photo / screenshot', `<p class="note">Loading photo…</p>`);
+    try {
+      const row = Number(photo.dataset.answerPhoto);
+      const d = T.mode === 'guest' ? await apiGet({action:'photo',row}) : await apiPost({action:'t_photo',pin:T.pin,row});
+      $("modalBody").innerHTML = d.ok ? ((d.images && d.images.length) ? `<div class="preview-grid">${d.images.map((img,i)=>`<img src="${img.src}" alt="Student submission ${i+1}" style="max-width:100%;border-radius:10px;border:1px solid var(--line)">`).join("")}</div>` : `<img src="${d.src}" alt="Student submission" style="max-width:100%;border-radius:10px">`) : `<p class="err">Could not load photo.</p>`;
+    } catch (err) { $("modalBody").innerHTML = `<p class="err">Could not load photo.</p>`; }
+  }
+});
+
+$("tGrid").addEventListener("click", e => { const b = e.target.closest("[data-stu]"); if (b) openStudent(b.dataset.stu); });
+
+
+// ---------- Teacher review dashboard (read-only summary) ----------
+let aiReviewData=null;
+function aiReviewAllowed(kind){
+  const f=$('aiReviewFilter').value;
+  return f==='all'||kind===f||(f==='action'&&(kind==='Needs Review'||kind==='Gemini Error'));
+}
+function renderAiReviewSummary(){
+  const d=aiReviewData;if(!d)return;
+  const t=d.totals;
+  $('aiReviewTotals').textContent=`Needs Review: ${t.needsReview} · Gemini Errors: ${t.geminiErrors} · Checked awaiting score: ${t.awaitingScore} · Pending/Processing: ${t.queued}`;
+  const grouped=(d.groups||[]).map(g=>{
+    const filtered=(d.items||[]).filter(x=>x.activityId===g.id&&aiReviewAllowed(x.kind));
+    if(!filtered.length)return '';
+    return `<details class="card" style="padding:10px 12px">
+      <summary style="cursor:pointer"><b>${esc(g.title)}</b><span class="note"> · ${filtered.length} submission(s)</span></summary>
+      <div class="list" style="gap:8px;margin-top:10px">${filtered.map(x=>`<div style="border-top:1px solid var(--line);padding-top:8px">
+        <b>${esc(x.learner)}</b> <span class="note">· ${esc(x.kind)} · Row ${x.row}</span>
+        <p class="note" style="overflow-wrap:anywhere;margin:4px 0">${esc(x.message||'')}</p>
+        <button class="small ai-review-open" type="button" data-activity="${esc(x.activityId)}" data-student="${esc(x.learner)}">Open student</button>
+      </div>`).join('')}</div>
+    </details>`;
+  }).filter(Boolean);
+  $('aiReviewResults').innerHTML=grouped.join('')||'<p class="note">No submissions match this filter. Refresh if you have recently changed grades or statuses.</p>';
+}
+async function loadAiReviewSummary(){
+  $('aiReviewTotals').textContent='Checking current grading queue and Submissions…';
+  $('aiReviewResults').innerHTML='';
+  try{
+    const d=await apiPost({action:'t_ai_review_summary',pin:T.pin});
+    if(!d||!d.ok||!Array.isArray(d.items))throw new Error(d?.message||d?.error||'The deployed Apps Script does not support Review & Errors. Deploy the supplied Code.gs as a new version.');
+    aiReviewData=d;renderAiReviewSummary();
+  }catch(e){$('aiReviewTotals').textContent='Could not load Review & Errors: '+String(e.message||e);}
+}
+$('aiReviewDashboard').addEventListener('toggle',e=>{if(e.target.open&&!aiReviewData)loadAiReviewSummary();});
+$('aiReviewRefresh').addEventListener('click',loadAiReviewSummary);
+$('aiReviewFilter').addEventListener('change',renderAiReviewSummary);
+$('aiReviewResults').addEventListener('click',async e=>{
+  const btn=e.target.closest('button.ai-review-open');if(!btn)return;
+  await loadAiCatalog();
+  const id=btn.dataset.activity,name=btn.dataset.student;
+  if(![...$('aiActivity').options].some(x=>x.value===id)){
+    $('aiReviewTotals').textContent='This activity is missing from the current activity dropdown.';return;
+  }
+  $('aiActivity').value=id;
+  $('aiActivity').dispatchEvent(new Event('change'));
+  // Wait for the activity roster request to finish before narrowing the list.
+  const box=$('aiSearch');box.value=name;
+  const timer=setInterval(()=>{
+    if($('aiRosterList').querySelector('.ai-entry')||!$('aiRosterCount').textContent.includes('Loading')){
+      clearInterval(timer);box.dispatchEvent(new Event('input'));
+      const first=$('aiRosterList').querySelector('details.ai-entry');if(first&&!first.open)first.open=true;
+    }
+  },150);
+  setTimeout(()=>clearInterval(timer),15000);
+  $('aiActivity').scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+// ---------- Teacher-only AI grading: activity-first, lazy per-student details ----------
+let aiCatalogLoaded=false, aiEnabled=false, aiRoster=[], aiActive=null, aiLast=null, aiKind='form';
+const aiCardKey = name => 'ai_' + Array.from(name).map(c=>c.codePointAt(0).toString(16)).join('_');
+function aiBadge(s) {
+  if(s.score)return `<span class="chip done">${esc(s.score)}</span>`;
+  if(s.hasResponse===false)return '<span class="chip">No submission</span>';
+  if(s.status==='Checked')return '<span class="chip checked">✓✓ Checked · awaiting score</span>';
+  if(s.status==='Redo')return '<span class="chip redo">↺ Redo</span>';
+  return '<span class="chip">Not scored</span>';
+}
+function aiTeacherButtons(d) {
+  if(!d.row || d.status!=='Checked' || d.score) return '';
+  return `<div class="actions" style="margin-top:12px">
+    <button class="small ai-retry">↻ Retry Gemini</button>
+    <button class="small ai-manual">✎ Enter Score</button>
+    <button class="small ai-redo">↺ Request Redo</button>
+  </div><div class="ai-action-message" aria-live="polite"></div>`;
+}
+function renderAiRoster() {
+  const q=$('aiSearch').value.toLowerCase().trim();
+  const visible=aiRoster.filter(s=>s.name.toLowerCase().includes(q));
+  $('aiRosterCount').textContent=aiRoster.length ? `${visible.length} of ${aiRoster.length} enrolled students · ${aiRoster.filter(s=>s.hasResponse).length} with a submission` : 'No students found for this activity.';
+  $('aiRosterList').innerHTML=visible.map(s=>`<details class="card ai-entry" data-learner="${esc(s.name)}" style="padding:10px 14px;gap:6px">
+    <summary style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <b>${esc(s.name)}</b>${aiBadge(s)}
+    </summary>
+    <div class="ai-details" style="padding:12px 0 4px"><p class="note">Open to load answers…</p></div>
+  </details>`).join('');
+}
+async function loadAiCatalog() {
+  if(aiCatalogLoaded)return;
+  $('aiStatus').textContent='Loading activity list…';
+  try {
+    const d=await apiPost({action:'t_ai_catalog',pin:T.pin});
+    if(!d.ok)throw new Error(d.error||'Could not load AI grading');
+    aiEnabled=!!d.enabled;aiCatalogLoaded=true;
+    $('aiActivity').innerHTML='<option value="">Select activity…</option>'+(d.activities||[]).map(a=>`<option value="${esc(a.id)}">${esc(a.title)}${a.visible?'':' (hidden)'}</option>`).join('');
+    $('aiStatus').textContent=aiEnabled?'Choose a topic, then expand individual students. Automatic grading continues after Check.':'AI grading disabled. Enable AI_GRADING_ENABLED in Apps Script properties only after school authorization.';
+  }catch(e){$('aiStatus').textContent='Could not load: '+String(e.message||e);}
+}
+$('aiActivity').addEventListener('change',async()=>{
+  const id=$('aiActivity').value;
+  aiRoster=[];aiActive=null;aiLast=null;
+  $('aiSearch').value='';$('aiRosterCount').textContent=id?'Loading student list and saved scores…':'';
+  $('aiRosterList').innerHTML='';
+  if(!id)return;
+  try{
+    const d=await apiPost({action:'t_ai_roster',pin:T.pin,activityId:id});
+    if(id!==$('aiActivity').value)return;
+    if(!d || d.ok!==true) throw new Error((d && (d.message || d.error)) || 'Unable to load the student roster from Apps Script.');
+    if(!Array.isArray(d.students)) throw new Error('The deployed Apps Script returned no student roster. Open Apps Script → Deploy → Manage deployments → Edit → New version → Deploy, then refresh this page.');
+    aiKind=d.kind||'form';
+    aiRoster=d.students.filter(x=>typeof x==='string'||(x&&typeof x.name==='string')).map(x=>typeof x==='string'?{name:x,status:'',score:''}:x);
+    renderAiRoster();
+    if(d.warning) $('aiRosterCount').textContent += ' · ' + d.warning;
+  }catch(e){$('aiRosterCount').textContent=String(e.message||e);}
+});
+$('aiSearch').addEventListener('input',renderAiRoster);
+$('aiRosterList').addEventListener('toggle',async e=>{
+  const node=e.target;
+  if(!node.matches?.('details.ai-entry')||!node.open||node.dataset.loaded==='yes')return;
+  node.dataset.loaded='yes';
+  const name=node.dataset.learner,id=$('aiActivity').value,out=node.querySelector('.ai-details');
+  if(aiRoster.find(s=>s.name===name)?.hasResponse===false){out.innerHTML='<p class="note">No submission recorded for this activity.</p>';return;}
+  out.innerHTML='<p class="note">Loading this student’s written answers…</p>';
+  try{
+    const d=await apiPost({action:'t_ai_detail',pin:T.pin,activityId:id,learner:name});
+    if(!d.ok)throw new Error(d.message||d.error||'Could not load answers');
+    const score=d.score?`<p><b>Saved score: ${esc(d.score)}</b></p>`:'<p class="note">No saved score yet.</p>';
+    if(d.row) node.dataset.submissionRow=String(d.row);
+    const actions=aiTeacherButtons(d);
+    if(d.kind==='photo') {
+      out.innerHTML=`${score}<p class="note">${d.photoCount||0} picture(s) submitted · ${esc(d.status||'')}</p>
+        ${d.photoRow?'<button class="small ai-show-pages">📷 Show all submitted pages</button>':''}
+        <div class="ai-photo-pages"></div>
+        <p class="note">Image grading uses the automatic Checked → Gemini queue. Unclear images need teacher review.</p>${actions}`;
+      if(d.photoRow) node.dataset.photoRow=String(d.photoRow);
+      return;
+    }
+    const audit=d.audit?`<p class="note">AI record: ${esc(d.audit.decision||'Pending')} · suggested ${d.audit.suggested} / ${d.audit.maximum}</p>
+      ${(d.audit.parts||[]).map(x=>`<p class="note"><b>${esc(x.question||'Question')}</b> — ${x.score}/${x.max}: ${esc(x.reason||'')}</p>`).join('')}`:'';
+    const answerList=(d.answers||[]).map((x,i)=>`<div style="padding:9px 0;border-top:1px solid var(--line)"><b>Question ${i+1}: ${esc(x.q)}</b><p class="instr" style="margin:6px 0">${esc(x.a)}</p></div>`).join('');
+    const canSuggest=aiEnabled&&!d.score;
+    out.innerHTML=`${score}${audit}${answerList}<div class="actions" style="margin-top:12px">
+      ${canSuggest?'<button class="small ai-suggest">Suggest score with Gemini</button>':''}
+    </div><div class="ai-suggestion"></div>${actions}`;
+  }catch(e){node.dataset.loaded='';out.innerHTML=`<p class="err">${esc(String(e.message||e))}</p>`;}
+}, true);
+$('aiRosterList').addEventListener('click',async e=>{
+  const btn=e.target.closest('button.ai-retry, button.ai-manual, button.ai-redo');
+  if(!btn)return;
+  const node=btn.closest('details.ai-entry');
+  const row=Number(node.dataset.submissionRow),name=node.dataset.learner,id=$('aiActivity').value;
+  const operation=btn.classList.contains('ai-retry')?'retry':btn.classList.contains('ai-manual')?'save_score':'redo';
+  const body={action:'t_ai_teacher_action',pin:T.pin,operation,submissionRow:row,learner:name,activityId:id};
+  if(operation==='save_score'){
+    const input=prompt('Enter the score as EARNED / MAXIMUM (example: 8 / 10). This will save the grade.');
+    if(input===null)return;
+    const match=input.trim().match(/^(\d+)\s*\/\s*(\d+)$/);
+    if(!match){toast('Use the format 8 / 10');return;}
+    body.earned=Number(match[1]);body.maximum=Number(match[2]);
+    if(body.maximum<1||body.maximum>100||body.earned>body.maximum){toast('Check the score and maximum points.');return;}
+    if(!confirm(`Save ${body.earned} / ${body.maximum} for ${name}? This action cannot overwrite an existing grade.`))return;
+  }
+  if(operation==='redo'){
+    const reason=prompt('What should the student correct before resubmitting?');
+    if(reason===null)return;
+    if(!reason.trim()){toast('Please enter a reason.');return;}
+    body.note=reason.trim();
+    if(!confirm(`Request a redo from ${name}?`))return;
+  }
+  const msg=node.querySelector('.ai-action-message');
+  btn.disabled=true;if(msg)msg.textContent='Saving teacher action…';
+  try{
+    const d=await apiPost(body);
+    if(!d.ok)throw new Error(d.message||d.error||'Action failed');
+    if(msg)msg.innerHTML=`<p class="teacher">${esc(d.message||'Saved.')}</p>`;
+    if(d.score||d.status==='Redo'){
+      const student=aiRoster.find(x=>x.name===name);
+      if(student){if(d.score)student.score=d.score;if(d.status)student.status=d.status;}
+      const summary=node.querySelector('summary .chip');
+      if(summary)summary.outerHTML=aiBadge(student||{score:d.score,status:d.status});
+      node.querySelectorAll('.ai-retry,.ai-manual,.ai-redo,.ai-suggest').forEach(el=>el.remove());
+      const scoreLine=node.querySelector('.ai-details > .note');
+      if(scoreLine&&d.score)scoreLine.textContent='Saved score: '+d.score;
+    }
+  }catch(err){if(msg)msg.innerHTML=`<p class="err">${esc(String(err.message||err))}</p>`;}
+  finally{btn.disabled=false;}
+});
+$('aiRosterList').addEventListener('click',async e=>{
+  const open=e.target.closest('button.ai-show-pages');
+  if (!open) return;
+  const node=open.closest('details.ai-entry'), row=Number(node.dataset.photoRow);
+  const target=node.querySelector('.ai-photo-pages');
+  open.disabled=true;target.textContent='Loading photos…';
+  try{
+    const r=await apiPost({action:'t_photo',pin:T.pin,row});
+    if(!r.ok)throw new Error(r.error||'Photos could not be loaded');
+    const pages=r.images&&r.images.length?r.images:(r.src?[{src:r.src}]:[]);
+    target.innerHTML=pages.map((p,i)=>`<div style="margin:12px 0"><b>Page ${i+1}</b><img src="${p.src}" alt="Student activity page ${i+1}" style="display:block;max-width:100%;max-height:750px;object-fit:contain;border-radius:8px;border:1px solid var(--line);margin-top:6px"></div>`).join('');
+    open.textContent='Pages loaded';
+  }catch(err){target.innerHTML=`<p class="err">${esc(String(err.message||err))}</p>`;open.disabled=false;}
+});
+$('aiRosterList').addEventListener('click',async e=>{
+  const suggest=e.target.closest('button.ai-suggest');
+  const approve=e.target.closest('button.ai-approve');
+  if(!suggest&&!approve)return;
+  const node=e.target.closest('details.ai-entry'),name=node.dataset.learner,id=$('aiActivity').value;
+  const target=node.querySelector('.ai-suggestion');
+  if(suggest){
+    suggest.disabled=true;target.textContent='Requesting Gemini suggestion…';
+    try{
+      const d=await apiPost({action:'t_ai_suggest',pin:T.pin,activityId:id,learner:name});
+      if(!d.ok)throw new Error(d.message||d.error||'Gemini grading failed');
+      const index=aiRoster.findIndex(s=>s.name===name);
+      if(aiRoster[index]?.score)throw new Error('A saved grade already exists; do not overwrite it.');
+      node.dataset.reviewRow=d.reviewRow;
+      target.innerHTML=`<p><b>Suggested total: ${d.suggested} / ${d.maximum}</b></p>
+        ${(d.parts||[]).map(x=>`<p class="note">${esc(x.question)}: ${x.score}/${x.max} — ${esc(x.reason)}</p>`).join('')}
+        <label>Final total: <input class="field ai-final" type="number" min="0" max="${d.maximum}" step="1" value="${d.suggested}"></label>
+        <div class="actions"><button class="primary ai-approve">Save corrected score</button></div>`;
+      node.dataset.maximum=d.maximum;
+    }catch(err){target.innerHTML=`<p class="err">${esc(String(err.message||err))}</p>`;suggest.disabled=false;}
+  }
+  if(approve){
+    const value=Number(node.querySelector('.ai-final').value),maximum=Number(node.dataset.maximum);
+    if(!Number.isInteger(value)||value<0||value>maximum){toast('Enter a valid whole-number score.');return;}
+    approve.disabled=true;approve.textContent='Saving…';
+    try{
+      const d=await apiPost({action:'t_ai_approve',pin:T.pin,reviewRow:Number(node.dataset.reviewRow),score:value});
+      if(!d.ok)throw new Error(d.message||d.error||'Save failed');
+      target.innerHTML=`<p class="teacher"><b>Score saved: ${esc(d.score)}</b> · Refresh Progress to view.</p>`;
+      const student=aiRoster.find(x=>x.name===name);if(student)student.score=d.score;
+      node.querySelector('summary .chip')?.remove();node.querySelector('summary').insertAdjacentHTML('beforeend',aiBadge({score:d.score}));
+      node.querySelector('.ai-suggest')?.remove();
+    }catch(err){target.insertAdjacentHTML('beforeend',`<p class="err">${esc(String(err.message||err))}</p>`);approve.disabled=false;approve.textContent='Save corrected score';}
+  }
+});
+
+// ---------- Student profiles (teacher & guest) ----------
+function renderStudents() {
+  if (!T.data) return;
+  const q = $("stuSearch").value.trim().toLowerCase();
+  const list = T.data.progress.filter(p => (p.learner + " " + (p.profile.fullName || "") + " " + (p.profile.section || "")).toLowerCase().includes(q));
+  $("stuGrid").innerHTML = list.length ? list.map(p => `<button class="stucard" data-stu="${esc(p.learner)}">${avatarHTML(p.profile)}
+      <span class="t"><b>${esc(p.profile.fullName || p.learner)}</b>${miniBadges(p.badges)}<span>${p.profile.section ? "Section " + esc(p.profile.section) + " · " : ""}${p.done}/${T.data.activities.length} done</span></span></button>`).join("")
+    : `<p class="note">No student matches.</p>`;
+  if (T.stu) openStudent(T.stu, true);
+}
+$("stuSearch").addEventListener("input", renderStudents);
+$("stuGrid").addEventListener("click", e => { const b = e.target.closest("[data-stu]"); if (b) openStudent(b.dataset.stu); });
+function closeStudent() { T.stu = ""; $("tStuOne").hidden = true; $("tStuList").hidden = false; }
+function openStudent(name, quiet) {
+  const p = T.data && T.data.progress.find(x => x.learner === name); if (!p) return;
+  T.stu = name; if (!quiet) setTTab("stu");
+  $("tStuList").hidden = true; $("tStuOne").hidden = false;
+  const pr = p.profile, acts = T.data.activities;
+  const stat = v => v === "Checked" ? `<span class="chip checked">✓✓ Checked</span>` : v === "Redo" ? `<span class="chip redo">↺ Redo</span>` : v ? `<span class="chip done">✓ Done</span>` : `<span class="chip">Not done</span>`;
+  $("tStuOne").innerHTML = `<button class="small back2" id="stuBack">◀ All students</button>
+    <div class="card"><div class="profhead">${avatarHTML(pr, "lg")}<div><h2>${esc(pr.fullName || name)}</h2>${pr.fullName && pr.fullName !== name ? `<p class="note">On class list as ${esc(name)}</p>` : ""}</div></div>
+      <div class="facts"><div class="fixed"><span>Grade</span><b>${esc(pr.grade || "Grade 7")}</b></div><div class="fixed"><span>Section</span><b>${esc(pr.section || "—")}</b></div>
+      <div class="fixed"><span>School</span><b>${esc(pr.school || "")}</b></div></div></div>
+    <div class="progress"><div class="row"><span><b>${typeof p.pct === "number" ? p.pct : 0}%</b> overall</span><span class="note">✏️ ${p.done} of ${acts.length} activities · 📖 ${p.read} of ${T.data.lessons.length} lessons</span></div>
+      <div class="bar"><i style="width:${typeof p.pct === "number" ? p.pct : 0}%"></i></div></div>
+    ${profileBadges(p)}
+    <h3 style="margin:4px 0 0">Work summary</h3>
+    <div class="card" id="workList">${acts.length ? acts.map(a => `<div class="work" data-a="${esc(a.id)}"><div class="actrow"><span>${esc(a.title)}${(p.scores || {})[a.id] ? ` <span class="score inline">Score: <b>${esc(p.scores[a.id])}</b></span>` : ""}</span>${stat(p.cells[a.id])}</div>
+      <div class="workx">${p.cells[a.id] ? `<span class="note">Loading…</span>` : ""}</div></div>`).join("") : `<p class="note">No activities posted yet.</p>`}</div>`;
+  $("stuBack").addEventListener("click", closeStudent);
+  loadWork(name);
+  if (!quiet) window.scrollTo(0, 0);
+}
+document.querySelector('[data-t="stu"]').addEventListener("click", closeStudent);
+
+function renderBadgeSet() {
+  $("badgeSet").hidden = T.mode !== "teacher";
+  if (T.mode !== "teacher") return;
+  const off = T.data.badgesOff || [];
+  $("badgeBoxes").innerHTML = BADGES.map(b => `<label class="bset"><input type="checkbox" value="${b.id}" ${off.includes(b.id) ? "" : "checked"}> ${b.i} ${esc(b.n)} <span class="note" style="font-weight:400">${esc(b.how)}</span></label>`).join("");
+}
+$("badgeSave").addEventListener("click", async () => {
+  const b = $("badgeSave"), off = [...$("badgeBoxes").querySelectorAll("input")].filter(x => !x.checked).map(x => x.value);
+  b.disabled = true; b.textContent = "Saving…";
+  try {
+    const r = await apiPost({ action: "t_badges", pin: T.pin, off });
+    if (!r.ok) { toast(errText(r.error)); return; }
+    toast("Badge settings saved ✓"); loadTeacher();
+  } catch (x) { toast(errText()); }
+  finally { b.disabled = false; b.textContent = "Save"; }
+});
+function profileBadges(p) {
+  const list = activeBadges(T.data.badgesOff), got = p.badges || [];
+  if (!list.length) return "";
+  const picks = T.mode === "teacher" && T.data.picks ? (T.data.picks[p.learner] || []) : [];
+  return `<div class="card"><div class="row" style="display:flex;justify-content:space-between;gap:8px"><b>🏅 Badges</b><span class="note">${list.filter(b => got.includes(b.id)).length} of ${list.length}</span></div>
+    <div class="shelf">${list.filter(b => got.includes(b.id)).map(b => `<div class="badge"><span class="i">${b.i}</span><b>${esc(b.n)}</b></div>`).join("") || `<p class="note" style="grid-column:1/-1;margin:0">No badges yet.</p>`}</div>
+    ${picks.map(x => `<div class="pick">🌟 ${x.activity ? "<b>" + esc(x.activity) + ":</b> " : ""}"${esc(x.note)}" <span class="note">${esc(x.date)}</span> <button class="small" data-unpick="${x.row}" data-l="${esc(p.learner)}">✕ Remove</button></div>`).join("")}</div>`;
+}
+
+// ---------- One student's work: answers (reflections), score only (quizzes), photos ----------
+T.work = {};
+async function loadWork(name) {
+  try {
+    const d = T.work[name] || await apiGet({ action: "answers", learner: name });
+    if (!d.ok) throw new Error(d.error);
+    T.work[name] = d;
+    if (T.stu !== name) return;
+    d.items.forEach(it => {
+      const box = document.querySelector(`#workList .work[data-a="${CSS.escape(it.id)}"] .workx`); if (!box) return;
+      if (!it.type) { box.innerHTML = ""; return; }
+      if (it.quiz) box.innerHTML = `<span class="note">📝 Quiz: score only</span>`;
+      else if (it.answers && it.answers.length) box.innerHTML = `<details class="ans"><summary>Show answers (${it.answers.length})</summary>${it.answers.map(x => `<div class="qa"><b>${esc(x.q)}</b><p>${esc(x.a)}</p></div>`).join("")}</details>`;
+      else if (it.photoRow) box.innerHTML = `<button class="small" data-photo="${it.photoRow}">📷 Show photo</button>`;
+      else if (it.answersError) box.innerHTML = `<span class="note">Answers can't be loaded right now.</span>`;
+      else if (it.type === "Google Form") box.innerHTML = `<span class="note">No answers found in the form for this name.</span>`;
+      else box.innerHTML = `<span class="note">${esc(it.type)}</span>`;
+    });
+  } catch (e) {
+    document.querySelectorAll("#workList .workx").forEach(b => { if (b.textContent.includes("Loading")) b.innerHTML = `<span class="note">Could not load. Tap ◀ All students and try again.</span>`; });
+  }
+}
+$("tStuOne").addEventListener("click", async e => {
+  const u = e.target.closest("button[data-unpick]");
+  if (u) {
+    u.disabled = true;
+    try {
+      const r = await apiPost({ action: "t_unpick", pin: T.pin, row: Number(u.dataset.unpick), learner: u.dataset.l });
+      if (!r.ok) { toast(errText(r.error)); u.disabled = false; return; }
+      toast("Teacher's Pick removed"); loadTeacher();
+    } catch (x) { toast(errText()); u.disabled = false; }
+    return;
+  }
+  const b = e.target.closest("button[data-photo]"); if (!b) return;
+  const row = Number(b.dataset.photo); b.disabled = true; b.textContent = "Loading…";
+  try {
+    const r = T.mode === "guest" ? await apiGet({ action: "photo", row }) : await apiPost({ action: "t_photo", pin: T.pin, row });
+    if (!r.ok) { toast(errText(r.error)); b.disabled = false; b.textContent = "📷 Show photo"; return; }
+    b.outerHTML = (r.images && r.images.length) ? `<div class="preview-grid">${r.images.map((img,i)=>`<img class="photo" src="${img.src}" alt="Student photo ${i+1}" style="max-width:100%;max-height:420px;border-radius:10px;border:1px solid var(--line)">`).join("")}</div>` : `<img class="photo" src="${r.src}" alt="Student's photo" style="max-width:100%;max-height:420px;border-radius:10px;border:1px solid var(--line)">`;
+  } catch (x) { toast(errText()); b.disabled = false; b.textContent = "📷 Show photo"; }
+});
+
+$("syncBtn").addEventListener("click", async () => {
+  const b = $("syncBtn"); b.disabled = true; b.textContent = "Getting answers… (can take a minute)";
+  try {
+    const r = await apiPost({ action: "t_sync", pin: T.pin });
+    if (!r.ok) { toast(errText(r.error)); return; }
+    $("syncOut").textContent = r.text; $("syncOut").hidden = false;
+    toast(r.added ? r.added + " answer(s) added ✓" : "No new answers found");
+    loadTeacher();
+  } catch (x) { toast(errText()); }
+  finally { b.disabled = false; b.textContent = "📝 Get Google Form answers"; }
+});
+
+// ---------- Google Forms that are not working (teacher only) ----------
+function renderFormWarn() {
+  const bad = T.mode === "teacher" && T.data ? T.data.activities.filter(a => a.formError) : [];
+  $("tFormWarn").hidden = !bad.length;
+  const why = { no_name_question: "the form has no question with \"Name\" in its title (e.g. Full name).",
+    form_unreadable: "the site can't open the form. In Apps Script run <b>allowGoogleForms</b> once, and make sure the form was made with the same Gmail as the Sheet." };
+  $("tFormWarn").innerHTML = bad.length ? `<b>⚠️ Google Form not working</b>` + bad.map(a => `<div style="margin-top:6px">• <b>${esc(a.title)}</b>: ${why[a.formError] || "the form could not be set up."} Students can't answer it until this is fixed.</div>`).join("") : "";
+}
+
+// ---------- Profile picture approvals (teacher) ----------
+function renderPics() {
+  const list = T.mode === "teacher" && T.data ? (T.data.pendingPhotos || []) : [];
+  $("cntPics").textContent = list.length || "";
+  $("tPics").hidden = !list.length;
+  if (!list.length) { $("tPics").innerHTML = ""; return; }
+  $("tPics").innerHTML = `<h3>New profile pictures to approve</h3><p class="note">The new picture shows only after you accept it.</p>` + list.map(x => `<div class="picq" data-l="${esc(x.learner)}">
+      ${avatarHTML({ fullName: x.fullName, photo: x.current })}<span class="arrow" aria-hidden="true">→</span>${avatarHTML({ fullName: x.fullName, photo: x.pending }, "lg")}
+      <b>${esc(x.fullName)}</b><span class="actions"><button class="primary small" data-ok="1">✓ Accept</button><button class="small" data-ok="0">✕ Decline</button></span></div>`).join("");
+}
+$("tPics").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-ok]"); if (!b) return;
+  const learner = b.closest(".picq").dataset.l, accept = b.dataset.ok === "1";
+  b.disabled = true; const label = b.textContent; b.textContent = "Saving…";
+  try {
+    const r = await apiPost({ action: "t_photo_review", pin: T.pin, learner, accept });
+    if (!r.ok && r.error !== "gone") { toast(errText(r.error)); b.disabled = false; b.textContent = label; return; }
+    const x = T.data.pendingPhotos.find(y => y.learner === learner);
+    T.data.pendingPhotos = T.data.pendingPhotos.filter(y => y.learner !== learner);
+    const p = T.data.progress.find(y => y.learner === learner);
+    if (p && x && accept) p.profile.photo = x.pending;
+    renderPics(); renderStudents(); toast(accept ? "Picture accepted ✓" : "Picture declined");
+  } catch (x) { toast(errText()); b.disabled = false; b.textContent = label; }
+});
+
+// ---------- Teacher's own profile ----------
+const TP = { photo: null };
+$("tMeBtn").addEventListener("click", () => {
+  const t = S.teacher || { name: "", details: "", photo: "" };
+  TP.photo = null; $("tpName").value = t.name || ""; $("tpDetails").value = t.details || "";
+  $("tpPic").innerHTML = avatarHTML({ fullName: t.name || "T", photo: t.photo }, "lg"); $("tpRemove").hidden = !t.photo;
+  showOnly("tprof");
+});
+$("tprofBack").addEventListener("click", () => showOnly("teach"));
+$("tpFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  if (!f.type.startsWith("image/")) { toast("Please choose a picture."); return; }
+  try { TP.photo = await squareThumb(f); $("tpPic").innerHTML = avatarHTML({ photo: TP.photo }, "lg"); $("tpRemove").hidden = false; }
+  catch (x) { toast("That picture can't be used. Try another one."); }
+});
+$("tpRemove").addEventListener("click", () => { TP.photo = ""; $("tpPic").innerHTML = avatarHTML({ fullName: $("tpName").value || "T" }, "lg"); $("tpRemove").hidden = true; });
+$("tprofForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const b = $("tpSave"); b.disabled = true; b.textContent = "Saving…";
+  try {
+    const body = { action: "t_profile", pin: T.pin, name: $("tpName").value, details: $("tpDetails").value };
+    if (TP.photo !== null) body.photo = TP.photo;
+    const r = await apiPost(body);
+    if (!r.ok) { toast(r.error === "no_name" ? "Please type your name." : errText(r.error)); return; }
+    S.teacher = r.teacher; if (T.data) T.data.teacher = r.teacher;
+    $("tTeacherCard").innerHTML = teacherStrip(S.teacher, true);
+    showOnly("teach"); toast("Teacher profile saved ✓");
+  } catch (x) { toast(errText()); }
+  finally { b.disabled = false; b.textContent = "Save profile"; }
+});
+
+// ---------- My profile (student) ----------
+const SCHOOL_NAME = "Tukuran Technical Vocational High School (TTVHS)";
+const P = { photo: null };   // null = keep, "" = remove, data URL = new
+function showWaiting(pr) {
+  const w = $("pfWaiting");
+  if (pr && pr.waiting) { w.innerHTML = `${pr.pending ? avatarHTML({ photo: pr.pending }, "sm") + " " : ""}<b>⏳ Waiting for your teacher.</b> Your new picture will show after your teacher accepts it.`; w.hidden = false; }
+  else w.hidden = true;
+}
+function paintMe() { const pr = S.profile || { fullName: S.me }; $("myAvatar").innerHTML = avatarHTML(pr); $("hi").textContent = "Hi, " + String(pr.fullName || S.me).trim().split(" ")[0] + "!"; }
+$("myProfileBtn").addEventListener("click", () => {
+  const pr = S.profile || { fullName: S.me, section: "", grade: "Grade 7", school: SCHOOL_NAME, photo: "" };
+  P.photo = null;
+  $("pfName").value = pr.fullName || S.me; $("pfSection").value = pr.section || "";
+  $("pfGrade").textContent = pr.grade || "Grade 7"; $("pfSchool").textContent = pr.school || SCHOOL_NAME;
+  $("profPic").innerHTML = avatarHTML(pr, "lg"); $("profRemove").hidden = !pr.photo && !pr.waiting;
+  showWaiting(pr);
+  showOnly("prof");
+});
+$("profBack").addEventListener("click", () => showOnly("dash"));
+$("profFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  if (!f.type.startsWith("image/")) { toast("Please choose a picture."); return; }
+  try {
+    P.photo = await squareThumb(f); $("profPic").innerHTML = avatarHTML({ photo: P.photo }, "lg"); $("profRemove").hidden = false;
+    $("pfWaiting").innerHTML = "<b>📨 Tap Save profile</b> to send this picture to your teacher. It will show after your teacher accepts it."; $("pfWaiting").hidden = false;
+  }
+  catch (x) { toast("That picture can't be used. Try another one."); }
+});
+$("profRemove").addEventListener("click", () => { P.photo = ""; $("pfWaiting").hidden = true; $("profPic").innerHTML = avatarHTML({ fullName: $("pfName").value }, "lg"); $("profRemove").hidden = true; });
+$("profForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const b = $("pfSave"); b.disabled = true; b.textContent = "Saving…";
+  try {
+    const body = { learner: S.me, action: "profile", fullName: $("pfName").value, section: $("pfSection").value };
+    if (P.photo !== null) body.photo = P.photo;
+    const r = DEMO ? { ok: true, profile: { fullName: body.fullName.trim(), section: body.section.trim(), grade: "Grade 7", school: SCHOOL_NAME, photo: P.photo === "" ? "" : (S.profile && S.profile.photo) || "", waiting: !!P.photo, pending: P.photo || "" } } : await apiPost(body);
+    if (!r.ok) { toast(r.error === "no_name" ? "Please type your full name." : errText(r.error)); return; }
+    const sent = typeof body.photo === "string" && body.photo !== "";
+    S.profile = r.profile; P.photo = null; paintMe(); showOnly("dash");
+    toast(sent ? "Saved ✓ New picture sent to your teacher for approval." : "Profile saved ✓");
+  } catch (x) { toast(errText()); }
+  finally { b.disabled = false; b.textContent = "Save profile"; }
+});
+// Crops the middle square, shrinks to 160px and keeps it small enough for the Sheet.
+async function squareThumb(file) {
+  const bmp = await createImageBitmap(file);
+  const side = Math.min(bmp.width, bmp.height), c = document.createElement("canvas");
+  c.width = c.height = 160;
+  c.getContext("2d").drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, 160, 160);
+  for (const q of [0.82, 0.7, 0.55, 0.4]) { const u = c.toDataURL("image/jpeg", q); if (u.length <= 38000) return u; }
+  throw new Error("too big");
+}
+
+document.querySelectorAll("[data-p]").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-p]").forEach(x => x.setAttribute("aria-selected", String(x === b)));
+  $("actForm").hidden = b.dataset.p !== "act"; $("lesForm").hidden = b.dataset.p !== "les";
+}));
+async function postForm(form, body, okMsg) {
+  const btn = form.querySelector("button[type=submit]"), label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Posting…";
+  try {
+    const r = await apiPost(Object.assign({ pin: T.pin }, body));
+    if (!r.ok) { toast(r.error === "doc_unreadable" ? "Can't open that Google Doc. Use a Doc in your own Drive." : errText(r.error)); return; }
+    form.reset(); syncShot();
+    toast(r.form === "auto" ? "Posted ✓ The form will mark students done by itself." : r.form === "manual" ? "Posted. Tip: use the form's /edit link so it can mark students done by itself." : okMsg);
+    loadTeacher();
+  } catch (x) { toast(errText()); }
+  finally { btn.disabled = false; btn.textContent = label; }
+}
+function syncShot() { const has = !!$("actForm").elements.form.value.trim(); $("shotRow").hidden = has; $("shotNote").hidden = has; }
+$("actForm").elements.form.addEventListener("input", syncShot);
+$("actForm").addEventListener("submit", e => {
+  e.preventDefault(); const f = e.target;
+  postForm(f, { action: "t_add_activity", title: f.elements.title.value, instructions: f.elements.instructions.value, needsScreenshot: f.elements.needsScreenshot.checked, form: f.elements.form.value.trim() }, "Activity posted ✓");
+});
+$("lesForm").addEventListener("submit", e => {
+  e.preventDefault(); const f = e.target;
+  postForm(f, { action: "t_add_lesson", title: f.elements.title.value, text: f.elements.text.value, doc: f.elements.doc.value.trim() }, "Lesson posted ✓");
+});
+
+// ---------- Start ----------
+(async () => {
+  $("demo").hidden = !DEMO;
+  const savedList = store.get("ai-lit-list");
+  if (savedList) { S.learners = savedList.learners || []; S.teacher = savedList.teacher || null; }
+  $("loading").hidden = true;
+  const pin = ss.get("ai-lit-pin");
+  if (pin && !DEMO) { T.mode = "teacher"; T.pin = pin; openTeacher(); } else showRole();
+  try {
+    const d = await apiGet({});
+    if (!d.ok) throw new Error(d.error);
+    S.learners = d.learners || []; S.teacher = d.teacher || S.teacher; S.learnersFailed = false;
+    store.set("ai-lit-list", { learners: S.learners, teacher: S.teacher });
+  } catch (e) { if (!S.learners.length) S.learnersFailed = true; }
+  if (!$("picker").hidden) renderNames();
+})();
+</script>
+</body>
+</html>
