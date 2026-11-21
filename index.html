@@ -1267,9 +1267,11 @@ function aiTeacherButtons(d) {
   </div><div class="ai-action-message" aria-live="polite"></div>`;
 }
 function renderAiRoster() {
-  const q=$('aiSearch').value.toLowerCase().trim();
-  const visible=aiRoster.filter(s=>s.name.toLowerCase().includes(q));
-  $('aiRosterCount').textContent=aiRoster.length ? `${visible.length} of ${aiRoster.length} enrolled students · ${aiRoster.filter(s=>s.hasResponse).length} with a submission` : 'No students found for this activity.';
+  const nameKey=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const q=nameKey($('aiSearch').value);
+  const visible=aiRoster.filter(s=>nameKey(s.name).includes(q));
+  $('aiRosterCount').textContent=aiRoster.length ? `${visible.length} of ${aiRoster.length} enrolled students · ${aiRoster.filter(s=>s.hasResponse).length} with a submission` : 'The enrolled student list is empty. Please verify the Learners tab or the deployed Apps Script.';
+  if(aiRoster.length && !visible.length) $('aiRosterCount').textContent='No matching student in the roster. Clear the search to see all '+aiRoster.length+' enrolled students.';
   $('aiRosterList').innerHTML=visible.map(s=>`<details class="card ai-entry" data-learner="${esc(s.name)}" style="padding:10px 14px;gap:6px">
     <summary style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <b>${esc(s.name)}</b>${aiBadge(s)}
@@ -1301,7 +1303,7 @@ async function loadAiRosterFor(id, focusStudent='') {
     aiKind=d.kind||'form';
     aiRoster=d.students.filter(x=>typeof x==='string'||(x&&typeof x.name==='string')).map(x=>typeof x==='string'?{name:x,status:'',score:''}:x);
     if(focusStudent){
-      const hit=aiRoster.find(x=>x.name.toLowerCase()===focusStudent.toLowerCase());
+      const hit=aiRoster.find(x=>x.name.toLowerCase().replace(/[^a-z0-9]/g,'')===focusStudent.toLowerCase().replace(/[^a-z0-9]/g,''));
       $('aiSearch').value=hit?hit.name:focusStudent;
     }
     renderAiRoster();
