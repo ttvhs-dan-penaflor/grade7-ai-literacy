@@ -1234,23 +1234,18 @@ $('aiReviewRefresh').addEventListener('click',loadAiReviewSummary);
 $('aiReviewFilter').addEventListener('change',renderAiReviewSummary);
 $('aiReviewResults').addEventListener('click',async e=>{
   const btn=e.target.closest('button.ai-review-open');if(!btn)return;
-  await loadAiCatalog();
   const id=btn.dataset.activity,name=btn.dataset.student;
-  if(![...$('aiActivity').options].some(x=>x.value===id)){
-    $('aiReviewTotals').textContent='This activity is missing from the current activity dropdown.';return;
-  }
-  $('aiActivity').value=id;
-  $('aiActivity').dispatchEvent(new Event('change'));
-  // Wait for the activity roster request to finish before narrowing the list.
-  const box=$('aiSearch');box.value=name;
-  const timer=setInterval(()=>{
-    if($('aiRosterList').querySelector('.ai-entry')||!$('aiRosterCount').textContent.includes('Loading')){
-      clearInterval(timer);box.dispatchEvent(new Event('input'));
-      const first=$('aiRosterList').querySelector('details.ai-entry');if(first&&!first.open)first.open=true;
+  try{
+    await loadAiCatalog();
+    if(![...$('aiActivity').options].some(x=>x.value===id)){
+      $('aiReviewTotals').textContent='This activity is missing from the current activity dropdown.';return;
     }
-  },150);
-  setTimeout(()=>clearInterval(timer),15000);
-  $('aiActivity').scrollIntoView({behavior:'smooth',block:'start'});
+    $('aiActivity').value=id;
+    // Await the actual roster request before searching. The previous timer
+    // could run before data arrived and incorrectly show "No students found".
+    await loadAiRosterFor(id,name);
+    $('aiActivity').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(err){$('aiReviewTotals').textContent='Could not open student: '+String(err.message||err);}
 });
 
 // ---------- Teacher-only AI grading: activity-first, lazy per-student details ----------
@@ -1293,8 +1288,7 @@ async function loadAiCatalog() {
     $('aiStatus').textContent=aiEnabled?'Choose a topic, then expand individual students. Automatic grading continues after Check.':'AI grading disabled. Enable AI_GRADING_ENABLED in Apps Script properties only after school authorization.';
   }catch(e){$('aiStatus').textContent='Could not load: '+String(e.message||e);}
 }
-$('aiActivity').addEventListener('change',async()=>{
-  const id=$('aiActivity').value;
+async function loadAiRosterFor(id, focusStudent='') {
   aiRoster=[];aiActive=null;aiLast=null;
   $('aiSearch').value='';$('aiRosterCount').textContent=id?'Loading student list and saved scores…':'';
   $('aiRosterList').innerHTML='';
@@ -1303,13 +1297,23 @@ $('aiActivity').addEventListener('change',async()=>{
     const d=await apiPost({action:'t_ai_roster',pin:T.pin,activityId:id});
     if(id!==$('aiActivity').value)return;
     if(!d || d.ok!==true) throw new Error((d && (d.message || d.error)) || 'Unable to load the student roster from Apps Script.');
-    if(!Array.isArray(d.students)) throw new Error('The deployed Apps Script returned no student roster. Open Apps Script → Deploy → Manage deployments → Edit → New version → Deploy, then refresh this page.');
+    if(!Array.isArray(d.students)) throw new Error('The deployed Apps Script returned no student roster. Deploy the latest Code.gs and refresh.');
     aiKind=d.kind||'form';
     aiRoster=d.students.filter(x=>typeof x==='string'||(x&&typeof x.name==='string')).map(x=>typeof x==='string'?{name:x,status:'',score:''}:x);
+    if(focusStudent){
+      const hit=aiRoster.find(x=>x.name.toLowerCase()===focusStudent.toLowerCase());
+      $('aiSearch').value=hit?hit.name:focusStudent;
+    }
     renderAiRoster();
     if(d.warning) $('aiRosterCount').textContent += ' · ' + d.warning;
+    if(focusStudent){
+      const first=$('aiRosterList').querySelector('details.ai-entry');
+      if(first)first.open=true;
+      else $('aiRosterCount').textContent='Student not found in the current enrolled roster. The historical submission is preserved; check the spelling in Learners and Submissions.';
+    }
   }catch(e){$('aiRosterCount').textContent=String(e.message||e);}
-});
+}
+$('aiActivity').addEventListener('change',()=>loadAiRosterFor($('aiActivity').value));
 $('aiSearch').addEventListener('input',renderAiRoster);
 $('aiRosterList').addEventListener('toggle',async e=>{
   const node=e.target;
