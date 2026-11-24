@@ -239,6 +239,31 @@ label.check[hidden] { display: none !important; }
 .activity-card .activity-body { display: flex; flex-direction: column; gap: 10px; padding: 0 18px 18px; border-top: 1px solid var(--line); }
 .activity-card .activity-body > :first-child { margin-top: 12px; }
 @media (prefers-reduced-motion: reduce) { .activity-card .activity-chevron { transition: none; } }
+
+/* Progress Dashboard v2 - teacher friendly, responsive, accessible. */
+.pd-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pd-filters label{font-size:13px;color:var(--muted);font-weight:700}
+.pd-filters .field{margin-top:4px;font-size:15px;padding:10px}
+.pd-tabs{display:flex;overflow-x:auto;gap:7px;padding-bottom:4px}
+.pd-tabs button{flex:none;padding:9px 12px;font-size:14px}
+.pd-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.pd-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pd-metric{border:1px solid var(--line);background:var(--surface);padding:14px;border-radius:15px}
+.pd-metric strong{display:block;font:700 clamp(24px,5vw,32px) var(--display);font-variant-numeric:tabular-nums}
+.pd-metric span{display:block;font-size:13px;color:var(--muted)}
+.pd-bar{height:10px;background:var(--line);border-radius:999px;overflow:hidden}
+.pd-bar>i{display:block;background:var(--accent);height:100%;border-radius:999px}
+.pd-person{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.pd-person:last-child{border-bottom:0}.pd-person-main{flex:1;min-width:0}
+.pd-person-main button{font-weight:700;text-align:left;text-decoration:none}.pd-person small{color:var(--muted)}
+.pd-person .pd-percent{font:700 19px var(--display);min-width:52px;text-align:right}
+.pd-matrix td,.pd-matrix th{white-space:nowrap;text-align:center;padding:8px 9px}
+.pd-matrix td:first-child,.pd-matrix th:first-child{text-align:left}
+.pd-dot{display:inline-grid;place-items:center;min-width:28px;height:28px;border-radius:7px;background:var(--line);font-size:13px;font-weight:700;color:var(--ink)}
+.pd-dot.yes{background:var(--accent);color:var(--accent-ink)}.pd-dot.redo{background:var(--amber-soft);color:var(--amber)}
+.pd-names{max-height:350px;overflow:auto}.pd-names button{display:block;padding:7px 0;text-align:left;width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0}
+.pd-daily-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+@media(max-width:560px){.pd-filters{grid-template-columns:1fr 1fr}.pd-filters label:last-child{grid-column:1/-1}.pd-metrics{gap:8px}.pd-metric{padding:12px}}
 </style>
 </head>
 <body>
@@ -302,15 +327,30 @@ label.check[hidden] { display: none !important; }
 
     <div id="tProg" class="list" hidden>
       <div class="filters"><span class="note">✓ done · ✓✓ checked · ↺ redo · numbers = quiz score · blank = not yet</span><button class="small treload" style="margin-left:auto">↻ Refresh</button></div>
-      <div class="seg progseg3" id="progSeg" role="tablist" aria-label="Progress view">
-        <button role="tab" data-pv="sum" aria-selected="true">📊 Summary</button>
+      <div class="card pd-filters" id="pdFilters">
+        <label>Grade<select class="field" id="pdGrade"><option value="Grade 7">Grade 7</option></select></label>
+        <label>Section<select class="field" id="pdSection"><option value="">All sections</option></select></label>
+        <label>Find student<input class="field" type="search" id="pdSearch" placeholder="Type a name…"></label>
+      </div>
+      <div class="pd-tabs" id="progSeg" role="tablist" aria-label="Progress view">
+        <button role="tab" data-pv="sum" aria-selected="true">📊 Dashboard</button>
+        <button role="tab" data-pv="students" aria-selected="false">👤 Students</button>
+        <button role="tab" data-pv="lessons" aria-selected="false">📖 Lessons</button>
+        <button role="tab" data-pv="daily" aria-selected="false">📅 Daily Report</button>
         <button role="tab" data-pv="ans" aria-selected="false">📝 Answers &amp; scores</button>
-        <button role="tab" data-pv="mps" aria-selected="false">📈 Summative Analysis</button>
+        <button role="tab" data-pv="mps" aria-selected="false">📈 Assessment</button>
       </div>
       <div id="pvSum" class="list">
         <div class="progress" id="classSum"></div>
-        <div class="tablewrap" id="tGrid"></div>
+        <div class="card" id="pdCategories"></div>
+        <details><summary class="note" style="cursor:pointer;font-weight:700">Show detailed class progress table</summary><div class="tablewrap" id="tGrid"></div></details>
         <p class="note">Tap a name to see that student's profile.</p>
+      </div>
+      <div id="pvStudents" class="list" hidden><div class="card" id="pdStudents"></div></div>
+      <div id="pvLessons" class="list" hidden><div class="card" id="pdLessons"></div></div>
+      <div id="pvDaily" class="list" hidden>
+        <div class="card"><label for="pdDate"><b>Reading date</b></label><input class="field" id="pdDate" type="date"><p class="note">Dates come from the first recorded “Read lesson” submission per learner and lesson. This is a reading-completion log, not school attendance.</p></div>
+        <div id="pdDailyResult" class="list"></div>
       </div>
       <div id="pvAns" class="list" hidden>
         <p class="note">Quizzes show the score. Reflections and essays show the answer. Tap a cell to read it all. Blank = not answered yet.</p>
@@ -891,6 +931,7 @@ function openTeacher() {
   $("tStuOne").hidden = true; $("tStuList").hidden = false;
   document.querySelectorAll("[data-s]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.s === T.status)));
   T.tab = "check";
+  if (!$('pdDate').value) { const now=new Date(); $("pdDate").value=[now.getFullYear(),String(now.getMonth()+1).padStart(2,"0"),String(now.getDate()).padStart(2,"0")].join("-"); }
   setTTab(T.tab); loadTeacher();
 }
 function setTTab(t) {
@@ -909,7 +950,7 @@ async function loadTeacher() {
     if (!d.ok) { if (d.error === "bad_pin") { ss.del("ai-lit-pin"); T.pin = ""; showRole(); toast("Please sign in again."); return; } throw new Error(d.error); }
     T.data = d; T.work = {}; T.allwork = null; if (d.teacher) S.teacher = d.teacher;
     $("tTeacherCard").innerHTML = teacherStrip(S.teacher, true);
-    renderActFilter(); renderSubs(); renderGrid(); renderStudents(); renderPics(); renderFormWarn(); renderBadgeSet();
+    pdUpdateSectionOptions(); renderActFilter(); renderSubs(); renderGrid(); renderStudents(); renderPics(); renderFormWarn(); renderBadgeSet();
     if (!$("pvAns").hidden) loadAllWork(true);
   } catch (e) {
     $("tSubs").innerHTML = `<p class="err">Could not load. Check your internet, then tap Refresh.</p>`; $("tGrid").innerHTML = "";
@@ -986,27 +1027,64 @@ $("tSubs").addEventListener("click", async e => {
   } catch (x) { toast(errText()); b.disabled = false; b.textContent = label; }
 });
 
-function renderGrid() {
-  const { activities: acts, progress, lessons } = T.data;
-  if (!progress.length) { $("tGrid").innerHTML = `<p class="note" style="padding:12px">No learners found.</p>`; $("classSum").innerHTML = ""; return; }
-  const total = acts.length + lessons.length;
-  const pctOf = p => typeof p.pct === "number" ? p.pct : (total ? Math.round((p.done + p.read) / total * 100) : 0);
-  const avg = Math.round(progress.reduce((t, p) => t + pctOf(p), 0) / progress.length);
-  const allDone = progress.filter(p => total && pctOf(p) === 100).length;
-  $("classSum").innerHTML = `<div class="row"><span><b>${avg}%</b> class average</span><span class="note">${allDone} of ${progress.length} students at 100%</span></div>
-    <div class="bar"><i style="width:${avg}%"></i></div>
-    <span class="note">Counts only what students can see: ${acts.length} activit${acts.length === 1 ? "y" : "ies"} + ${lessons.length} lesson${lessons.length === 1 ? "" : "s"}. Hidden ones are not counted.</span>`;
-  const head = `<tr><th>Learner</th><th>Overall</th><th>Activities</th><th>Lessons read</th>${acts.map(a => `<th title="${esc(a.title)}">${esc(a.title)}</th>`).join("")}</tr>`;
-  const pctCell = v => `<td class="pct"><span class="mini"><i style="width:${v}%"></i></span>${v}%</td>`;
-  const body = progress.map(p => `<tr><td><button class="linkbtn" data-stu="${esc(p.learner)}">${esc(p.learner)}</button></td>${pctCell(pctOf(p))}<td>${p.done} / ${acts.length}</td><td>${p.read} / ${lessons.length}</td>${acts.map(a => {
-    const v = p.cells[a.id], sc = (p.scores || {})[a.id];
-    const mark = v === "Checked" ? "✓✓" : "✓";
-    return v === "Redo" ? `<td class="redo">↺</td>` : v ? `<td class="ok">${sc ? esc(sc) : mark}</td>` : `<td></td>`;
-  }).join("")}</tr>`).join("");
-  const actPct = a => Math.round(progress.filter(p => p.cells[a.id] && p.cells[a.id] !== "Redo").length / progress.length * 100);
-  const foot = `<tr class="foot"><td>Class</td><td>${avg}%</td><td></td><td></td>${acts.map(a => `<td>${actPct(a)}% done</td>`).join("")}</tr>`;
-  $("tGrid").innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+const PD = { section:"", search:"", pv:"sum" };
+const pdRows = () => (T.data?.progress || []).filter(p => {
+  const section = (p.profile && p.profile.section || "").trim();
+  return (!PD.section || (PD.section === "__unassigned__" ? !section : section === PD.section)) && (!PD.search || (p.learner + " " + (p.profile?.fullName || "")).toLowerCase().includes(PD.search));
+});
+const pdPct = p => Number.isFinite(Number(p.pct)) ? Number(p.pct) : 0;
+const pdFill = v => `<div class="pd-bar"><i style="width:${Math.max(0,Math.min(100,v))}%"></i></div>`;
+function pdUpdateSectionOptions() {
+  const select = $("pdSection");
+  const sections = [...new Set((T.data?.progress || []).map(p => (p.profile?.section || "").trim()))].sort((a,b)=>a.localeCompare(b));
+  select.innerHTML = `<option value="">All sections</option>` + sections.map(s => `<option value="${esc(s || "__unassigned__")}">${esc(s||"Unassigned")}</option>`).join("");
+  select.value = (sections.includes(PD.section) || (PD.section === "__unassigned__" && sections.includes(""))) ? PD.section : ""; PD.section = select.value;
 }
+function pdMetric(label, value) { return `<div class="pd-metric"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`; }
+function renderGrid() {
+  if (!T.data) return;
+  const {activities:acts,lessons} = T.data, progress = pdRows();
+  const total = acts.length + lessons.length, count = progress.length;
+  const avg = count ? Math.round(progress.reduce((sum,p)=>sum+pdPct(p),0)/count) : 0;
+  const complete = total ? progress.filter(p=>pdPct(p)===100).length : 0;
+  const attention = progress.filter(p => total && pdPct(p)<50).length;
+  const lessonPct = count && lessons.length ? Math.round(100*progress.reduce((t,p)=>t+p.read,0)/(count*lessons.length)) : 0;
+  const actPct = count && acts.length ? Math.round(100*progress.reduce((t,p)=>t+p.done,0)/(count*acts.length)) : 0;
+  const checked = (T.data.submissions || []).filter(s=>s.status === "Checked" && progress.some(p=>p.learner===s.learner)).length;
+  const submitted = (T.data.submissions || []).filter(s=>s.status === "Submitted" && progress.some(p=>p.learner===s.learner)).length;
+  $("classSum").innerHTML = `<div class="pd-metrics">${pdMetric("Average completion",avg+"%")}${pdMetric("Completed everything",complete+" / "+count)}${pdMetric("Below 50%",attention)}${pdMetric("Students in view",count)}</div>${pdFill(avg)}<p class="note">Only visible lessons and activities are counted. ${esc(acts.length)} activities · ${esc(lessons.length)} lessons. Students with no assigned section are under “Unassigned”.</p>`;
+  $("pdCategories").innerHTML = `<h3 style="margin:0">Completion by category</h3>`+[["Lessons read",lessonPct],["Activities done",actPct]].map(([label,value])=>`<div><div class="pd-daily-summary"><b>${label}</b><b>${value}%</b></div>${pdFill(value)}</div>`).join("")+`<p class="note">${checked} checked submissions · ${submitted} awaiting checking (submission counts, not distinct students).</p>`;
+  if (!count) { $("tGrid").innerHTML='<p class="note">No matching students.</p>'; renderPDExtras(); return; }
+  const head = `<tr><th>Student</th><th>Overall</th><th>Activities</th><th>Lessons</th>${acts.map(a=>`<th>${esc(a.title)}</th>`).join("")}</tr>`;
+  const body = progress.map(p=>`<tr><td><button class="linkbtn" data-stu="${esc(p.learner)}">${esc(p.profile?.fullName || p.learner)}</button></td><td>${pdPct(p)}%</td><td>${p.done}/${acts.length}</td><td>${p.read}/${lessons.length}</td>${acts.map(a=>{const st=p.cells?.[a.id],score=p.scores?.[a.id];return `<td class="${st==="Redo"?"redo":st?"ok":""}">${st==="Redo"?"↺":st?(score?esc(score):st==="Checked"?"✓✓":"✓"):"—"}</td>`;}).join("")}</tr>`).join("");
+  $("tGrid").innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+  renderPDExtras();
+}
+function renderPDExtras() {
+  if (!T.data) return;
+  const rows=pdRows(), lessons=T.data.lessons||[], acts=T.data.activities||[];
+  $("pdStudents").innerHTML = `<h3 style="margin:0">Individual student progress</h3>`+(rows.length?rows.slice().sort((a,b)=>pdPct(a)-pdPct(b)).map(p=>`<div class="pd-person"><div class="pd-person-main"><button class="linkbtn" data-stu="${esc(p.learner)}">${esc(p.profile?.fullName||p.learner)}</button><br><small>${esc(p.profile?.section||"Unassigned")} · ${p.read}/${lessons.length} lessons · ${p.done}/${acts.length} activities</small>${pdFill(pdPct(p))}</div><span class="pd-percent">${pdPct(p)}%</span></div>`).join(""):'<p class="note">No matching students.</p>');
+  const lessonData = (T.data.lessonReads || {});
+  const heads=lessons.map((l,i)=>`<th title="${esc(l.title)}">L${i+1}</th>`).join("");
+  const body=rows.map(p=>`<tr><td><button class="linkbtn" data-stu="${esc(p.learner)}">${esc(p.profile?.fullName||p.learner)}</button></td>${lessons.map(l=>`<td><span class="pd-dot ${lessonData[p.learner]?.[l.id]?"yes":""}" title="${esc(l.title)}">${lessonData[p.learner]?.[l.id]?"✓":"—"}</span></td>`).join("")}</tr>`).join("");
+  $("pdLessons").innerHTML=`<h3 style="margin:0">Lesson completion heatmap</h3><p class="note">✓ = marked read · — = not recorded. Lesson columns follow the published lesson order.</p><div class="tablewrap"><table class="pd-matrix"><thead><tr><th>Student</th>${heads}</tr></thead><tbody>${body}</tbody></table></div><details><summary class="note">Show lesson titles</summary>${lessons.map((l,i)=>`<p class="note">L${i+1} — ${esc(l.title)}</p>`).join("")}</details>`;
+  renderPDDaily();
+}
+function renderPDDaily(){
+  const day=$("pdDate").value, events=(T.data?.readEvents||[]).filter(e=>e.date===day && pdRows().some(p=>p.learner===e.learner));
+  const unique=[...new Set(events.map(e=>e.learner))];
+  if(T.mode!=="teacher") {$("pdDailyResult").innerHTML='<p class="note">Daily reading records are available in Teacher mode only.</p>';return;}
+  if(!day){$("pdDailyResult").innerHTML='<p class="note">Choose a date to see readers.</p>';return;}
+  const byName=new Map(pdRows().map(p=>[p.learner,p]));
+  $("pdDailyResult").innerHTML=`<div class="card"><div class="pd-daily-summary"><div><h2>${unique.length} / ${byName.size}</h2><p class="note">Students who finished at least one lesson on ${esc(day)}</p></div><b>${byName.size?Math.round(unique.length/byName.size*100):0}%</b></div>${pdFill(byName.size?unique.length/byName.size*100:0)}</div><div class="card"><h3 style="margin:0">Students who read (${unique.length})</h3>`+(unique.length?unique.sort().map(n=>`<div class="work"><b>${esc(byName.get(n)?.profile?.fullName||n)}</b>${events.filter(e=>e.learner===n).map(e=>`<span class="note">✓ ${esc(e.title)} · ${esc(e.time||"")}</span>`).join("")}</div>`).join(""):'<p class="note">No reading completions recorded on this date.</p>')+`</div><div class="card"><h3 style="margin:0">Not recorded as reading (${byName.size-unique.length})</h3><p class="note">This does not necessarily mean absent from school.</p><div class="pd-names">${[...byName].filter(([n])=>!unique.includes(n)).map(([n,p])=>`<button data-stu="${esc(n)}">${esc(p.profile?.fullName||n)}</button>`).join("")}</div></div>`;
+}
+$("pdSection").addEventListener("change",e=>{PD.section=e.target.value;renderGrid();renderSummativeIfOpen();});
+$("pdSearch").addEventListener("input",e=>{PD.search=e.target.value.trim().toLowerCase();renderGrid();renderSummativeIfOpen();});
+$("pdDate").addEventListener("change",renderPDDaily);
+$("pdStudents").addEventListener("click",e=>{const b=e.target.closest("[data-stu]");if(b)openStudent(b.dataset.stu);});
+$("pdLessons").addEventListener("click",e=>{const b=e.target.closest("[data-stu]");if(b)openStudent(b.dataset.stu);});
+$("pdDailyResult").addEventListener("click",e=>{const b=e.target.closest("[data-stu]");if(b)openStudent(b.dataset.stu);});
+function renderSummativeIfOpen(){if(!$("pvMps").hidden)renderSummativeAnalysis();}
 
 // Summative Analysis: uses already-loaded class progress and recorded scores only.
 // No Google Forms response scan is required, so this works in Teacher and Guest views.
@@ -1033,7 +1111,7 @@ function summativeStats(activity, progress) {
 function renderSummativeAnalysis() {
   const el = $("mpsOut");
   if (!T.data) { el.innerHTML = `<p class="note">Load class progress first.</p>`; return; }
-  const progress = T.data.progress || [];
+  const progress = pdRows();
   const tests = (T.data.activities || []).filter(a => /summative(?:\s+test|\s+assessment)?/i.test(a.title));
   if (!tests.length) { el.innerHTML = `<p class="note">No visible summative tests found in Activities.</p>`; return; }
   const data = tests.map(a => ({ a, stat: summativeStats(a, progress) }));
@@ -1072,7 +1150,11 @@ function renderSummativeAnalysis() {
 document.querySelectorAll("[data-pv]").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("[data-pv]").forEach(x => x.setAttribute("aria-selected", String(x === b)));
   const pv = b.dataset.pv;
+  PD.pv=pv;
   $("pvSum").hidden = pv !== "sum";
+  $("pvStudents").hidden = pv !== "students";
+  $("pvLessons").hidden = pv !== "lessons";
+  $("pvDaily").hidden = pv !== "daily";
   $("pvAns").hidden = pv !== "ans";
   $("pvMps").hidden = pv !== "mps";
   if (pv === "ans") loadAllWork();
