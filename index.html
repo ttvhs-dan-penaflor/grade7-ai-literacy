@@ -788,7 +788,7 @@ function cardHTML(a, expanded = false) {
     if (a.needsScreenshot) {
       actions = p ? `${previewGridHTML(p.files || [], "Your photo preview")}
           <div class="actions"><button class="primary" data-do="send">Send ${((p.files||[]).length > 1 ? "photos" : "photo")}</button><button data-do="clear">Choose another</button></div>`
-        : `<div class="actions"><label class="upload">📷 Upload photo or screenshot(s)<input type="file" accept="image/*" data-do="pick" multiple></label></div><div class="upload-note">You may upload up to 3 pictures for this activity.</div>`;
+        : `<div class="actions"><label class="upload">📷 Upload photo or screenshot(s)<input type="file" accept="image/*" data-do="pick" multiple></label></div><div class="upload-note">You may upload up to 6 pictures for this activity.</div>`;
     } else actions = `<div class="actions"><button class="primary" data-do="done">Mark as done</button></div>`;
   } else {
     const what = a.type === "Screenshot" ? "Photo sent" : a.type === "Google Form" ? "Form answered" : "Marked done";
@@ -816,12 +816,12 @@ function cardHTML(a, expanded = false) {
 $("acts").addEventListener("change", e => {
   const inp = e.target.closest("input[data-do=pick]"); if (!inp || !inp.files || !inp.files.length) return;
   const id = inp.closest(".card").dataset.id;
-  const files = Array.from(inp.files).slice(0, 3);
+  const files = Array.from(inp.files).slice(0, 6);
   if (!files.length) return;
   if (files.some(f => !String(f.type || "").startsWith("image/"))) { toast("Please choose picture files only."); return; }
   clearPending(id);
   S.pending[id] = { files: files.map(f => ({ file: f, url: URL.createObjectURL(f) })) };
-  if (inp.files.length > 3) toast("Only the first 3 pictures will be used.");
+  if (inp.files.length > 6) toast("Only the first 6 pictures will be used.");
   render();
 });
 $("acts").addEventListener("click", async e => {
