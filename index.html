@@ -264,6 +264,18 @@ label.check[hidden] { display: none !important; }
 .pd-names{max-height:350px;overflow:auto}.pd-names button{display:block;padding:7px 0;text-align:left;width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0}
 .pd-daily-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 @media(max-width:560px){.pd-filters{grid-template-columns:1fr 1fr}.pd-filters label:last-child{grid-column:1/-1}.pd-metrics{gap:8px}.pd-metric{padding:12px}}
+
+/* Final grade report: compact numerical columns, responsive horizontal scrolling. */
+.final-controls { align-items:flex-end; }
+.final-controls label { font-size:13px; font-weight:700; min-width:150px; flex:1; }
+.final-table table { min-width:760px; font-variant-numeric:tabular-nums; }
+.final-table th, .final-table td { padding:10px 9px; }
+.final-table td:first-child, .final-table th:first-child { position:static; white-space:normal; }
+.final-table .totalcol { background:var(--accent-soft); font-weight:700; }
+.final-table .num { color:var(--muted); text-align:right; }
+.final-breakdown { display:grid; gap:9px; }
+.final-breakdown .pd-daily-summary { font-size:14px; }
+.final-table .scorewarn { color:var(--amber); }
 </style>
 </head>
 <body>
@@ -339,6 +351,7 @@ label.check[hidden] { display: none !important; }
         <button role="tab" data-pv="daily" aria-selected="false">📅 Daily Report</button>
         <button role="tab" data-pv="ans" aria-selected="false">📝 Answers &amp; scores</button>
         <button role="tab" data-pv="mps" aria-selected="false">📈 Assessment</button>
+        <button role="tab" id="finalTab" data-pv="final" aria-selected="false" hidden>🏁 Final Scores</button>
       </div>
       <div id="pvSum" class="list">
         <div class="progress" id="classSum"></div>
@@ -355,6 +368,15 @@ label.check[hidden] { display: none !important; }
       <div id="pvAns" class="list" hidden>
         <p class="note">Quizzes show the score. Reflections and essays show the answer. Tap a cell to read it all. Blank = not answered yet.</p>
         <div class="tablewrap" id="tWork"></div>
+      </div>
+      <div id="pvFinal" class="list" hidden>
+        <div class="card">
+          <h2>Final Scores</h2><p class="note">Raw points from recorded grades, including authorized partial credit. Reading completion is reported separately. This is not a transmuted school grade.</p>
+          <div class="pd-metrics" id="finalMetrics"></div>
+          <div class="actions final-controls"><label>Sort by <select class="field" id="finalSort"><option value="az">Surname A–Z</option><option value="high">Highest total</option><option value="low">Lowest total</option></select></label><button class="small" id="finalCSV">↓ Export CSV</button><button class="small" id="finalPrint">Print report</button></div>
+          <p class="note" id="finalNotice" aria-live="polite"></p>
+          <div class="tablewrap final-table" id="finalTable"></div>
+        </div>
       </div>
       <div id="pvMps" class="list" hidden>
         <p class="note">Class-level MPS and population SD from saved summative test scores. Students without a valid score are not counted as zero.</p>
@@ -489,6 +511,7 @@ label.check[hidden] { display: none !important; }
       <div class="bar"><i id="barFill"></i></div>
       <span class="note" id="readN"></span>
     </div>
+    <div class="card" id="myFinal" hidden></div>
     <div class="card" id="myBadges" hidden></div>
     <div class="seg" role="tablist" aria-label="Section">
       <button role="tab" id="segLes" data-v="lessons" aria-selected="false">📖 Lessons</button>
@@ -536,6 +559,8 @@ const DEMO = !API_URL;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/g, u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+const nameCompare = (a,b) => String(a||'').trim().localeCompare(String(b||'').trim(),'en',{sensitivity:'base',numeric:true});
+const rosterOrder = (a,b) => nameCompare(a.learner,b.learner);
 let toastT; const toast = m => { const t = $("toast"); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3000); };
 const S = { teacher: null, learners: [], me: "", acts: [], lessons: [], view: "acts", filter: "all", pending: {}, open: null };
 
@@ -622,7 +647,7 @@ function showPicker() {
 function renderNames() {
   if (!S.learners.length) { $("names").innerHTML = `<p class="note">${S.learnersFailed ? "Could not load the class list. Check your internet, then go back and try again." : "Loading names…"}</p>`; return; }
   const q = $("search").value.trim().toLowerCase();
-  const list = S.learners.filter(n => n.toLowerCase().includes(q));
+  const list = S.learners.filter(n => n.toLowerCase().includes(q)).sort(nameCompare);
   $("names").innerHTML = list.length ? list.map(n => `<button data-n="${esc(n)}">${esc(n)}</button>`).join("") : `<p class="note">No name matches “${esc(q)}”.</p>`;
 }
 $("search").addEventListener("input", renderNames);
@@ -630,7 +655,9 @@ $("names").addEventListener("click", e => { const b = e.target.closest("button[d
 $("switch").addEventListener("click", () => { try { localStorage.removeItem("ai-lit-me"); } catch (e) {} S.me = ""; showPicker(); });
 
 async function choose(name) {
+  S.acts = []; S.lessons = [];
   S.me = name; try { localStorage.setItem("ai-lit-me", name); } catch (e) {}
+  $("myFinal").hidden = true; $("myFinal").innerHTML = "";
   showOnly("dash");
   $("hi").textContent = "Hi, " + name.split(" ")[0] + "!"; S.profile = null; paintMe();
   let v = "acts"; try { v = localStorage.getItem("ai-lit-view") || "acts"; } catch (e) {}
@@ -747,6 +774,7 @@ document.querySelectorAll(".filters button[data-f]").forEach(b => b.addEventList
 const isDone = a => a.status === "done" || a.status === "checked";
 
 function render() {
+  renderMyFinal();
   const total = S.acts.length, done = S.acts.filter(isDone).length;
   $("doneN").textContent = done; $("ofN").textContent = `of ${total} activities done`;
   $("pct").textContent = total ? Math.round(done / total * 100) + "%" : "";
@@ -918,13 +946,15 @@ $("pinForm").addEventListener("submit", async e => {
   } catch (x) { $("pinErr").textContent = errText(); $("pinErr").hidden = false; }
   finally { b.disabled = false; b.textContent = "Sign in"; }
 });
-$("logout").addEventListener("click", () => { T.pin = ""; T.data = null; T.photos = {}; T.stu = ""; ss.del("ai-lit-pin"); showRole(); });
+$("logout").addEventListener("click", () => { T.pin = ""; T.data = null; T.photos = {}; T.stu = ""; $("finalTable").innerHTML=""; $("finalMetrics").innerHTML=""; ss.del("ai-lit-pin"); showRole(); });
 
 function openTeacher() {
   const g = T.mode === "guest";
   showOnly("teach"); $("title").textContent = "AI Literacy Class";
   $("tHello").textContent = g ? "👀 Guest view" : "👋 Hello, Teacher!";
   $("logout").textContent = g ? "◀ Exit" : "Sign out"; $("syncRow").hidden = g; $("syncOut").hidden = true; $("tMeBtn").hidden = g; $("tTeacherCard").innerHTML = "";
+  $("finalTab").hidden = g;
+  if (g) { $("finalTable").innerHTML = ""; $("finalMetrics").innerHTML = ""; $("finalNotice").textContent = ""; if (PD.pv === "final") document.querySelector('[data-pv="sum"]').click(); }
   $("guestNote").hidden = !g; $("tabPost").hidden = g; $("tabAi").hidden = g; $("tTabs").classList.toggle("guest", g); $("tTabs").classList.toggle("ai-tabs", !g);
   $("checkLbl").textContent = g ? "Work" : "Check";
   T.status = g ? "all" : "Submitted"; T.stu = ""; T.photos = {}; selectedAnswersLearner = ""; selectedAnswersSearch = "";
@@ -948,7 +978,7 @@ async function loadTeacher() {
   try {
     const d = T.mode === "guest" ? await apiGet({ action: "guest" }) : await apiPost({ action: "t_overview", pin: T.pin });
     if (!d.ok) { if (d.error === "bad_pin") { ss.del("ai-lit-pin"); T.pin = ""; showRole(); toast("Please sign in again."); return; } throw new Error(d.error); }
-    T.data = d; T.work = {}; T.allwork = null; if (d.teacher) S.teacher = d.teacher;
+    T.data = d; T.data.progress = (d.progress || []).slice().sort(rosterOrder); T.work = {}; T.allwork = null; if (d.teacher) S.teacher = d.teacher;
     $("tTeacherCard").innerHTML = teacherStrip(S.teacher, true);
     pdUpdateSectionOptions(); renderActFilter(); renderSubs(); renderGrid(); renderStudents(); renderPics(); renderFormWarn(); renderBadgeSet();
     if (!$("pvAns").hidden) loadAllWork(true);
@@ -981,7 +1011,7 @@ function renderSubs() {
     return `<article class="card sub ${st === "checked" ? "checked" : st === "redo" ? "redo" : ""}" data-row="${s.row}">
       <div class="meta"><span>${esc(s.when)} · ${s.photo ? "📷 Photo" : s.type === "Google Form" ? "📝 Answered the Google Form" : "Marked done"}</span><span class="chip ${st}">${chipTxt}</span></div>
       <p class="who"><button class="linkbtn" data-stu="${esc(s.learner)}">${esc(s.learner)}</button></p><p class="what">${esc(s.activity)}</p>
-      ${s.score ? `<div class="score">Score: <b>${esc(s.score)}</b></div>` : ""}
+      ${!g && s.score ? `<div class="score">Score: <b>${esc(s.score)}</b></div>` : ""}
       ${s.attempts > 1 ? `<span class="attempts">🔁 Answered ${s.attempts} times (first answer counts)</span>` : ""}
       ${s.photo ? (ph && ph.length ? `<div class="preview-grid">${ph.map((img,i)=>`<img class="photo" src="${img.src}" alt="Photo ${i+1} from ${esc(s.learner)}">`).join("")}</div>` : "")
         + `<div class="actions">${ph && ph.length ? "" : `<button class="small" data-x="photo">Show photo</button>`}${/^https:\/\//.test(s.url) ? `<a href="${esc((String(s.url).split(/\n+/)[0] || s.url))}" target="_blank" rel="noopener">Open in Drive</a>` : ""}</div>` : ""}
@@ -1046,7 +1076,7 @@ function renderGrid() {
   const {activities:acts,lessons} = T.data, progress = pdRows();
   const total = acts.length + lessons.length, count = progress.length;
   const avg = count ? Math.round(progress.reduce((sum,p)=>sum+pdPct(p),0)/count) : 0;
-  const complete = total ? progress.filter(p=>pdPct(p)===100).length : 0;
+  const complete = total ? progress.filter(p=>Number(p.done)===acts.length && Number(p.read)===lessons.length).length : 0;
   const attention = progress.filter(p => total && pdPct(p)<50).length;
   const lessonPct = count && lessons.length ? Math.round(100*progress.reduce((t,p)=>t+p.read,0)/(count*lessons.length)) : 0;
   const actPct = count && acts.length ? Math.round(100*progress.reduce((t,p)=>t+p.done,0)/(count*acts.length)) : 0;
@@ -1055,20 +1085,21 @@ function renderGrid() {
   $("classSum").innerHTML = `<div class="pd-metrics">${pdMetric("Average completion",avg+"%")}${pdMetric("Completed everything",complete+" / "+count)}${pdMetric("Below 50%",attention)}${pdMetric("Students in view",count)}</div>${pdFill(avg)}<p class="note">Only visible lessons and activities are counted. ${esc(acts.length)} activities · ${esc(lessons.length)} lessons. Students with no assigned section are under “Unassigned”.</p>`;
   $("pdCategories").innerHTML = `<h3 style="margin:0">Completion by category</h3>`+[["Lessons read",lessonPct],["Activities done",actPct]].map(([label,value])=>`<div><div class="pd-daily-summary"><b>${label}</b><b>${value}%</b></div>${pdFill(value)}</div>`).join("")+`<p class="note">${checked} checked submissions · ${submitted} awaiting checking (submission counts, not distinct students).</p>`;
   if (!count) { $("tGrid").innerHTML='<p class="note">No matching students.</p>'; renderPDExtras(); return; }
-  const head = `<tr><th>Student</th><th>Overall</th><th>Activities</th><th>Lessons</th>${acts.map(a=>`<th>${esc(a.title)}</th>`).join("")}</tr>`;
-  const body = progress.map(p=>`<tr><td><button class="linkbtn" data-stu="${esc(p.learner)}">${esc(p.profile?.fullName || p.learner)}</button></td><td>${pdPct(p)}%</td><td>${p.done}/${acts.length}</td><td>${p.read}/${lessons.length}</td>${acts.map(a=>{const st=p.cells?.[a.id],score=p.scores?.[a.id];return `<td class="${st==="Redo"?"redo":st?"ok":""}">${st==="Redo"?"↺":st?(score?esc(score):st==="Checked"?"✓✓":"✓"):"—"}</td>`;}).join("")}</tr>`).join("");
+  const head = `<tr><th>Student</th><th>Overall</th><th>Activities</th><th>Lessons</th>${T.mode === "teacher" ? "<th>Total score</th>" : ""}${acts.map(a=>`<th>${esc(a.title)}</th>`).join("")}</tr>`;
+  const body = progress.map(p=>`<tr><td><button class="linkbtn" data-stu="${esc(p.learner)}">${esc(p.profile?.fullName || p.learner)}</button></td><td>${pdPct(p)}%</td><td>${p.done}/${acts.length}</td><td>${p.read}/${lessons.length}</td>${T.mode === "teacher" ? `<td>${esc(totalLabel(scoreSummary(acts,p.scores||{})))}</td>` : ""}${acts.map(a=>{const st=p.cells?.[a.id],score=T.mode === "teacher" ? p.scores?.[a.id] : "";return `<td class="${st==="Redo"?"redo":st?"ok":""}">${st==="Redo"?"↺":st?(score?esc(score):st==="Checked"?"✓✓":"✓"):"—"}</td>`;}).join("")}</tr>`).join("");
   $("tGrid").innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
   renderPDExtras();
 }
 function renderPDExtras() {
   if (!T.data) return;
   const rows=pdRows(), lessons=T.data.lessons||[], acts=T.data.activities||[];
-  $("pdStudents").innerHTML = `<h3 style="margin:0">Individual student progress</h3>`+(rows.length?rows.slice().sort((a,b)=>pdPct(a)-pdPct(b)).map(p=>`<div class="pd-person"><div class="pd-person-main"><button class="linkbtn" data-stu="${esc(p.learner)}">${esc(p.profile?.fullName||p.learner)}</button><br><small>${esc(p.profile?.section||"Unassigned")} · ${p.read}/${lessons.length} lessons · ${p.done}/${acts.length} activities</small>${pdFill(pdPct(p))}</div><span class="pd-percent">${pdPct(p)}%</span></div>`).join(""):'<p class="note">No matching students.</p>');
+  $("pdStudents").innerHTML = `<h3 style="margin:0">Individual student progress</h3>`+(rows.length?rows.slice().sort(rosterOrder).map(p=>`<div class="pd-person"><div class="pd-person-main"><button class="linkbtn" data-stu="${esc(p.learner)}">${esc(p.profile?.fullName||p.learner)}</button><br><small>${esc(p.profile?.section||"Unassigned")} · ${p.read}/${lessons.length} lessons · ${p.done}/${acts.length} activities</small>${pdFill(pdPct(p))}</div><span class="pd-percent">${pdPct(p)}%</span></div>`).join(""):'<p class="note">No matching students.</p>');
   const lessonData = (T.data.lessonReads || {});
   const heads=lessons.map((l,i)=>`<th title="${esc(l.title)}">L${i+1}</th>`).join("");
   const body=rows.map(p=>`<tr><td><button class="linkbtn" data-stu="${esc(p.learner)}">${esc(p.profile?.fullName||p.learner)}</button></td>${lessons.map(l=>`<td><span class="pd-dot ${lessonData[p.learner]?.[l.id]?"yes":""}" title="${esc(l.title)}">${lessonData[p.learner]?.[l.id]?"✓":"—"}</span></td>`).join("")}</tr>`).join("");
   $("pdLessons").innerHTML=`<h3 style="margin:0">Lesson completion heatmap</h3><p class="note">✓ = marked read · — = not recorded. Lesson columns follow the published lesson order.</p><div class="tablewrap"><table class="pd-matrix"><thead><tr><th>Student</th>${heads}</tr></thead><tbody>${body}</tbody></table></div><details><summary class="note">Show lesson titles</summary>${lessons.map((l,i)=>`<p class="note">L${i+1} — ${esc(l.title)}</p>`).join("")}</details>`;
   renderPDDaily();
+  if (PD.pv === "final") renderFinalScores();
 }
 function renderPDDaily(){
   const day=$("pdDate").value, events=(T.data?.readEvents||[]).filter(e=>e.date===day && pdRows().some(p=>p.learner===e.learner));
@@ -1076,7 +1107,7 @@ function renderPDDaily(){
   if(T.mode!=="teacher") {$("pdDailyResult").innerHTML='<p class="note">Daily reading records are available in Teacher mode only.</p>';return;}
   if(!day){$("pdDailyResult").innerHTML='<p class="note">Choose a date to see readers.</p>';return;}
   const byName=new Map(pdRows().map(p=>[p.learner,p]));
-  $("pdDailyResult").innerHTML=`<div class="card"><div class="pd-daily-summary"><div><h2>${unique.length} / ${byName.size}</h2><p class="note">Students who finished at least one lesson on ${esc(day)}</p></div><b>${byName.size?Math.round(unique.length/byName.size*100):0}%</b></div>${pdFill(byName.size?unique.length/byName.size*100:0)}</div><div class="card"><h3 style="margin:0">Students who read (${unique.length})</h3>`+(unique.length?unique.sort().map(n=>`<div class="work"><b>${esc(byName.get(n)?.profile?.fullName||n)}</b>${events.filter(e=>e.learner===n).map(e=>`<span class="note">✓ ${esc(e.title)} · ${esc(e.time||"")}</span>`).join("")}</div>`).join(""):'<p class="note">No reading completions recorded on this date.</p>')+`</div><div class="card"><h3 style="margin:0">Not recorded as reading (${byName.size-unique.length})</h3><p class="note">This does not necessarily mean absent from school.</p><div class="pd-names">${[...byName].filter(([n])=>!unique.includes(n)).map(([n,p])=>`<button data-stu="${esc(n)}">${esc(p.profile?.fullName||n)}</button>`).join("")}</div></div>`;
+  $("pdDailyResult").innerHTML=`<div class="card"><div class="pd-daily-summary"><div><h2>${unique.length} / ${byName.size}</h2><p class="note">Students who finished at least one lesson on ${esc(day)}</p></div><b>${byName.size?Math.round(unique.length/byName.size*100):0}%</b></div>${pdFill(byName.size?unique.length/byName.size*100:0)}</div><div class="card"><h3 style="margin:0">Students who read (${unique.length})</h3>`+(unique.length?unique.sort(nameCompare).map(n=>`<div class="work"><b>${esc(byName.get(n)?.profile?.fullName||n)}</b>${events.filter(e=>e.learner===n).map(e=>`<span class="note">✓ ${esc(e.title)} · ${esc(e.time||"")}</span>`).join("")}</div>`).join(""):'<p class="note">No reading completions recorded on this date.</p>')+`</div><div class="card"><h3 style="margin:0">Not recorded as reading (${byName.size-unique.length})</h3><p class="note">This does not necessarily mean absent from school.</p><div class="pd-names">${[...byName].filter(([n])=>!unique.includes(n)).map(([n,p])=>`<button data-stu="${esc(n)}">${esc(p.profile?.fullName||n)}</button>`).join("")}</div></div>`;
 }
 $("pdSection").addEventListener("change",e=>{PD.section=e.target.value;renderGrid();renderSummativeIfOpen();});
 $("pdSearch").addEventListener("input",e=>{PD.search=e.target.value.trim().toLowerCase();renderGrid();renderSummativeIfOpen();});
@@ -1096,6 +1127,88 @@ function parseSummativeScore(raw) {
   if (!Number.isFinite(earned) || !Number.isFinite(possible) || possible <= 0 || earned < 0 || earned > possible) return null;
   return { earned, possible, pct: earned / possible * 100 };
 }
+// Final score calculations use one saved grade per activity ID. Fixed maxima are the approved closeout scheme.
+const FINAL_MAX = Object.freeze({
+ A3e680af8:15,Ab3598166:15,A1f3e4d1a:10,Aeebccac0:10,
+ A7c145bd2:30,Ab8c0fa8a:30,Aca47da76:25,A8b66d3cb:10,
+ Ae4066137:25,A53fd6b74:50,A04314655:40,Ac2538a7b:45,A5a025703:15,A72eaf8c3:10,A9e68ef91:15,
+ Aa645ae50:15,Ab7f429cb:25,A9346abe6:10,Ac11c7822:20,A2d9c9a78:15,
+ A87ce2d84:15,A2f75ab05:20,A4a3419ce:15,Ab8436a34:20,A7019d7cb:30,Aa3c053b5:30,A53b75935:20,A5deb2026:100
+});
+function scoreSummary(activities,scores) {
+ const parts = Array.from({length:6},()=>({earned:0,max:0,graded:0,count:0,unknown:0,conflict:0}));
+ const total={earned:0,max:0,graded:0,count:0,unknown:0,conflict:0,parts};
+ const seen=new Set();
+ for(const a of activities||[]) {
+   if(!a.id||seen.has(a.id))continue; seen.add(a.id);
+   const match=String(a.title||"").match(/\bLesson\s+([1-5])\b/i);
+   const part=parts[match?Number(match[1])-1:5], score=parseSummativeScore(scores?.[a.id]);
+   const possible=FINAL_MAX[a.id] || 0;
+   for(const t of [total,part]) {
+     t.count++;
+     if(!possible){t.unknown++;continue;}
+     t.max+=possible;
+     if(!score)continue;
+     if(score.possible!==possible){t.conflict++;continue;}
+     t.earned+=score.earned;t.graded++;
+   }
+ }
+ return total;
+}
+const finalNumber = n => Number.isInteger(n)?String(n):String(Math.round(n*100)/100);
+const totalLabel = s => `${finalNumber(s.earned)} / ${finalNumber(s.max)}${s.graded!==s.count?"*":""}`;
+const finalPercent = s => s.max && s.graded===s.count ? (s.earned/s.max*100).toFixed(1)+"%" : "—";
+function finalSummaryHTML(s){
+ if(!s.count)return "";
+ return `<div class="card"><h3 style="margin:0">Final score</h3><div class="pd-metrics">${pdMetric("Total points",totalLabel(s))}${pdMetric("Score percentage",finalPercent(s))}</div><p class="note">${s.graded}/${s.count} recorded grades · Raw points, not completion percentage.</p><div class="final-breakdown">${s.parts.map((p,i)=>p.count?`<div><div class="pd-daily-summary"><b>${i<5?"Lesson "+(i+1):"Other activities"}</b><b>${esc(totalLabel(p))}</b></div>${pdFill(p.max?p.earned/p.max*100:0)}</div>`:"").join("")}</div>${s.graded!==s.count?'<p class="note">* Provisional: missing grades, unknown maxima or inconsistent score denominators. Percentage withheld until all are verified.</p>':""}</div>`;
+}
+function renderMyFinal(){
+ const el=$("myFinal"); const scores=Object.fromEntries(S.acts.map(a=>[a.id,a.score]));
+ const summary=scoreSummary(S.acts,scores);
+ el.hidden=!summary.count; el.innerHTML=summary.count?finalSummaryHTML(summary):"";
+}
+function finalRows(){
+ if(T.mode!=="teacher"||!T.data)return [];
+ const rows=pdRows().map(p=>({p,s:scoreSummary(T.data.activities,p.scores||{})}));
+ const mode=$("finalSort").value;
+ return rows.sort((a,b)=>mode==="az"?rosterOrder(a.p,b.p):(mode==="high"?b.s.earned-a.s.earned:a.s.earned-b.s.earned)||rosterOrder(a.p,b.p));
+}
+function finalReportData(){
+ const rows=finalRows(); const hasOther=rows.some(r=>r.s.parts[5].count);
+ const parts=[0,1,2,3,4,...(hasOther?[5]:[])];
+ const reference=scoreSummary(T.data?.activities||[],{});
+ const headers=["No.","Student (registered name)","Section",...parts.map(i=>`${i<5?"Lesson "+(i+1):"Other"} / ${reference.parts[i].max}`),`Total / ${reference.max}`,"Score %","Activities","Lessons read"];
+ const data=rows.map(({p,s},i)=>[i+1,p.learner,p.profile?.section||"Unassigned",...parts.map(k=>s.parts[k].count?totalLabel(s.parts[k]):"—"),totalLabel(s),finalPercent(s),`${p.done}/${T.data.activities.length}`,`${p.read}/${T.data.lessons.length}`]);
+ return {rows,headers,data,reference};
+}
+function renderFinalScores(){
+ if(T.mode!=="teacher"||!T.data){$("pvFinal").hidden=true;return;}
+ const {rows,headers,data,reference}=finalReportData();
+ const complete=rows.filter(r=>r.s.count&&r.s.graded===r.s.count).length;
+ const totals=rows.filter(r=>r.s.count&&r.s.graded===r.s.count);
+ const mean=totals.length?totals.reduce((n,r)=>n+r.s.earned/r.s.max*100,0)/totals.length:null;
+ $("finalMetrics").innerHTML=pdMetric("Maximum points",reference.max)+pdMetric("Students in view",rows.length)+pdMetric("Fully graded",`${complete}/${rows.length}`)+pdMetric("Mean score %",mean===null?"—":mean.toFixed(1)+"%");
+ $("finalNotice").textContent=`${reference.count} visible activities. ${complete} fully graded. ${rows.length-complete} provisional. * Missing or inconsistent scores are not assumed to be earned. Export and print follow the current filters and sort order.`;
+ $("finalTable").innerHTML=rows.length?`<table><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${data.map((r,i)=>`<tr>${r.map((v,j)=>`<td class="${j===headers.length-4?"totalcol":j===0?"num":""}">${j===1?`<button class="linkbtn" data-stu="${esc(rows[i].p.learner)}">${esc(v)}</button>`:esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table>`:'<p class="note">No matching students.</p>';
+ $("finalCSV").disabled=$("finalPrint").disabled=!rows.length;
+}
+$("finalSort").addEventListener("change",renderFinalScores);
+$("finalTable").addEventListener("click",e=>{const b=e.target.closest("[data-stu]");if(b&&T.mode==="teacher")openStudent(b.dataset.stu);});
+function csvCell(v){let t=String(v??"");if(/^[=+@-]/.test(t))t="'"+t;return '"'+t.replace(/"/g,'""')+'"';}
+$("finalCSV").addEventListener("click",()=>{
+ if(T.mode!=="teacher"||!T.data)return;
+ const {headers,data}=finalReportData();if(!data.length)return;
+ const csv="\uFEFF"+[headers,...data].map(r=>r.map(csvCell).join(",")).join("\r\n");
+ const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+ const link=document.createElement("a");link.href=url;link.download="Grade7_AI_Literacy_Final_Scores.csv";document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+$("finalPrint").addEventListener("click",()=>{
+ if(T.mode!=="teacher"||!T.data)return;
+ const {headers,data,reference}=finalReportData();if(!data.length)return;
+ const win=window.open("","_blank");if(!win){toast("Allow pop-ups to print the report.");return;}
+ win.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Grade 7 AI Literacy – Final Scores</title><style>@page{size:13in 8.5in;margin:.35in}body{font:10pt Arial,sans-serif;color:#15242b;margin:0}h1{font-size:17pt;margin:5px 0}p{margin:4px 0}table{border-collapse:collapse;width:100%;font-size:9pt;margin-top:9px}th,td{border:1px solid #b8c5c8;padding:3px 5px;text-align:center}th{background:#e4efed}th:nth-child(2),td:nth-child(2){text-align:left}thead{display:table-header-group}tr{break-inside:avoid}button{margin:8px 0}@media print{button{display:none}}</style></head><body><p>Region IX – Zamboanga Peninsula · SDO Zamboanga del Sur</p><strong>Tukuran Technical Vocational High School</strong><h1>Grade 7 AI Literacy — Final Score Report</h1><p>${data.length} students · ${reference.count} activities · Maximum ${reference.max} points · Raw scores</p><p>Printed ${esc(new Date().toLocaleDateString("en-PH"))} · * Provisional / unverified score · Reading is separate from points.</p><button onclick="window.print()">Print / Save PDF</button><table><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${data.map(r=>`<tr>${r.map(v=>`<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></body></html>`);
+ win.document.close();win.focus();
+});
 function summativeStats(activity, progress) {
   const results = progress.map(p => parseSummativeScore((p.scores || {})[activity.id])).filter(Boolean);
   const n = results.length;
@@ -1157,6 +1270,8 @@ document.querySelectorAll("[data-pv]").forEach(b => b.addEventListener("click", 
   $("pvDaily").hidden = pv !== "daily";
   $("pvAns").hidden = pv !== "ans";
   $("pvMps").hidden = pv !== "mps";
+  $("pvFinal").hidden = pv !== "final" || T.mode !== "teacher";
+  if (pv === "final") renderFinalScores();
   if (pv === "ans") loadAllWork();
   if (pv === "mps") renderSummativeAnalysis();
 }));
@@ -1201,7 +1316,7 @@ function showStudentAnswers(name) {
   const status = s => s === 'Redo' ? `<span class="chip redo">↺ Redo</span>` : s === 'Checked' ? `<span class="chip checked">✓✓ Checked</span>` : s ? `<span class="chip done">✓ Done</span>` : `<span class="chip">Not done</span>`;
   const rows = acts.map(a => {
     const s = state[a.id] || "";
-    const score = scores[a.id] ? `<span class="score inline"><b>${esc(scores[a.id])}</b></span>` : "";
+    const score = T.mode === "teacher" && scores[a.id] ? `<span class="score inline"><b>${esc(scores[a.id])}</b></span>` : "";
     const action = s ? `<button class="small" data-answer-one="${esc(a.id)}" data-learner="${esc(name)}">${score ? 'View details' : 'View answer / work'}</button>` : "";
     return `<div class="card" style="gap:8px;padding:13px 15px">
       <div class="meta"><span>${esc(a.date || "")}</span>${status(s)}</div>
@@ -1351,7 +1466,7 @@ function aiTeacherButtons(d) {
 function renderAiRoster() {
   const nameKey=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   const q=nameKey($('aiSearch').value);
-  const visible=aiRoster.filter(s=>nameKey(s.name).includes(q));
+  const visible=aiRoster.filter(s=>nameKey(s.name).includes(q)).sort((a,b)=>nameCompare(a.name,b.name));
   $('aiRosterCount').textContent=aiRoster.length ? `${visible.length} of ${aiRoster.length} enrolled students · ${aiRoster.filter(s=>s.hasResponse).length} with a submission` : 'The enrolled student list is empty. Please verify the Learners tab or the deployed Apps Script.';
   if(aiRoster.length && !visible.length) $('aiRosterCount').textContent='No matching student in the roster. Clear the search to see all '+aiRoster.length+' enrolled students.';
   $('aiRosterList').innerHTML=visible.map(s=>`<details class="card ai-entry" data-learner="${esc(s.name)}" style="padding:10px 14px;gap:6px">
@@ -1545,9 +1660,10 @@ function openStudent(name, quiet) {
       <div class="fixed"><span>School</span><b>${esc(pr.school || "")}</b></div></div></div>
     <div class="progress"><div class="row"><span><b>${typeof p.pct === "number" ? p.pct : 0}%</b> overall</span><span class="note">✏️ ${p.done} of ${acts.length} activities · 📖 ${p.read} of ${T.data.lessons.length} lessons</span></div>
       <div class="bar"><i style="width:${typeof p.pct === "number" ? p.pct : 0}%"></i></div></div>
+    ${T.mode === "teacher" ? finalSummaryHTML(scoreSummary(acts,p.scores||{})) : ""}
     ${profileBadges(p)}
     <h3 style="margin:4px 0 0">Work summary</h3>
-    <div class="card" id="workList">${acts.length ? acts.map(a => `<div class="work" data-a="${esc(a.id)}"><div class="actrow"><span>${esc(a.title)}${(p.scores || {})[a.id] ? ` <span class="score inline">Score: <b>${esc(p.scores[a.id])}</b></span>` : ""}</span>${stat(p.cells[a.id])}</div>
+    <div class="card" id="workList">${acts.length ? acts.map(a => `<div class="work" data-a="${esc(a.id)}"><div class="actrow"><span>${esc(a.title)}${T.mode === "teacher" && (p.scores || {})[a.id] ? ` <span class="score inline">Score: <b>${esc(p.scores[a.id])}</b></span>` : ""}</span>${stat(p.cells[a.id])}</div>
       <div class="workx">${p.cells[a.id] ? `<span class="note">Loading…</span>` : ""}</div></div>`).join("") : `<p class="note">No activities posted yet.</p>`}</div>`;
   $("stuBack").addEventListener("click", closeStudent);
   loadWork(name);
@@ -1783,14 +1899,14 @@ $("lesForm").addEventListener("submit", e => {
 (async () => {
   $("demo").hidden = !DEMO;
   const savedList = store.get("ai-lit-list");
-  if (savedList) { S.learners = savedList.learners || []; S.teacher = savedList.teacher || null; }
+  if (savedList) { S.learners = (savedList.learners || []).slice().sort(nameCompare); S.teacher = savedList.teacher || null; }
   $("loading").hidden = true;
   const pin = ss.get("ai-lit-pin");
   if (pin && !DEMO) { T.mode = "teacher"; T.pin = pin; openTeacher(); } else showRole();
   try {
     const d = await apiGet({});
     if (!d.ok) throw new Error(d.error);
-    S.learners = d.learners || []; S.teacher = d.teacher || S.teacher; S.learnersFailed = false;
+    S.learners = (d.learners || []).slice().sort(nameCompare); S.teacher = d.teacher || S.teacher; S.learnersFailed = false;
     store.set("ai-lit-list", { learners: S.learners, teacher: S.teacher });
   } catch (e) { if (!S.learners.length) S.learnersFailed = true; }
   if (!$("picker").hidden) renderNames();
